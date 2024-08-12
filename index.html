@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grateful Dead Show Finder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" rel="stylesheet">
+    <style>
+        body, html {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2.5em;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .search-container {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+            position: relative;
+        }
+        .search-header {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .search-header input {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .search-header button {
+            padding: 12px 20px;
+            font-size: 16px;
+            background-color: #4A90E2;
+            background-image: linear-gradient(to bottom, #4A90E2, #357ABD);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            font-weight: 500;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .search-header button:hover {
+            background-color: #357ABD;
+            transform: translateY(-2px);
+        }
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .filters input, .filters select {
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            flex: 1;
+            min-width: 120px;
+        }
+        #loading {
+            text-align: center;
+            display: none;
+            font-size: 18px;
+            color: #4A90E2;
+            margin: 20px 0;
+        }
+        #loading-spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #4A90E2;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spinner 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        .show {
+            background-color: white;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .show:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .show-details {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        .pagination button {
+            padding: 8px 16px;
+            font-size: 14px;
+            background-color: #4A90E2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .pagination button:hover {
+            background-color: #357ABD;
+        }
+        .pagination button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .ui-autocomplete {
+            max-height: 200px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 1000;
+        }
+        @media (max-width: 600px) {
+            .search-header, .filters {
+                flex-direction: column;
+            }
+            .search-header input, .search-header button, .filters input, .filters select {
+                width: 100%;
+            }
+            .pagination {
+                flex-wrap: wrap;
+            }
+            .ui-autocomplete {
+                max-width: calc(100% - 40px);
+                left: 20px !important;
+            }
+        }
+
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Grateful Dead Tape Finder</h1>
+    </header>
+    <main>
+        <div class="search-container">
+            <div class="search-header">
+                <input type="text" id="searchQuery" 
+                       placeholder="Enter Song, Taper, or something..." 
+                       autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                <button onclick="searchShows()">
+                    <span class="button-icon">&#128269;</span> Search
+                </button>
+            </div>
+            <div class="filters">
+                <input type="number" id="yearFrom" placeholder="Year from" min="1965" max="1995" value="1965">
+                <input type="number" id="yearTo" placeholder="Year to" min="1965" max="1995" value="1995">
+                <input type="text" id="venue" placeholder="Venue">
+                <select id="sortOrder">
+                    <option value="avg_rating desc">Highest Rated</option>
+                    <option value="date desc">Newest first</option>
+                    <option value="date asc">Oldest first</option>
+                    <option value="downloads desc">Most Downloads</option>
+                </select>
+            </div>
+            <div id="loading">
+                <div id="loading-spinner"></div>
+                <p>Searching for shows...</p>
+            </div>
+            <div id="results"></div>
+            <div class="pagination">
+                <button id="prevPage" onclick="changePage(-1)" disabled>Previous</button>
+                <span id="pageInfo"></span>
+                <button id="nextPage" onclick="changePage(1)">Next</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script>
+        let currentPage = 1;
+        const resultsPerPage = 10;
+        let totalResults = 0;
+
+        function searchShows(page = 1) {
+            const query = $('#searchQuery').val();
+            const yearFrom = $('#yearFrom').val();
+            const yearTo = $('#yearTo').val();
+            const venue = $('#venue').val();
+            const sortOrder = $('#sortOrder').val();
+
+            if (!query && yearFrom === "1965" && yearTo === "1995" && !venue) {
+                alert('Please enter at least one search term or adjust the year range');
+                return;
+            }
+            
+            $('#loading').show();
+            $('#results').empty();
+
+            let baseQuery = 'collection:(GratefulDead) AND mediatype:(etree) AND creator:(Grateful Dead)';
+            if (query) baseQuery += ` AND (${query})`;
+            if (yearFrom) baseQuery += ` AND year:[${yearFrom} TO ${yearTo || '*'}]`;
+            if (venue) baseQuery += ` AND venue:(${venue})`;
+
+            const url = `https://archive.org/advancedsearch.php?q=${encodeURIComponent(baseQuery)}&fl[]=identifier,title,year,venue,coverage&sort[]=${sortOrder}&output=json&rows=${resultsPerPage}&page=${page}`;
+
+            $.getJSON(url, function(data) {
+                const results = data.response.docs;
+                totalResults = data.response.numFound;
+                currentPage = page;
+                updatePagination();
+
+                $('#loading').hide();
+                if (results.length === 0) {
+                    $('#results').html('<p>No shows found. Try different search terms.</p>');
+                } else {
+                    results.forEach(show => {
+                        $('#results').append(`
+                            <div class="show" onclick="openPlayerPage('${show.identifier}')">
+                                <strong>${show.year}: ${show.title}</strong>
+                                <div class="show-details">
+                                    Venue: ${show.venue || 'N/A'}
+                                    Coverage: ${show.coverage || 'N/A'}
+                                </div>
+                            </div>
+                        `);
+                    });
+                }
+            }).fail(function() {
+                $('#loading').hide();
+                $('#results').html('<p>Error occurred while searching. Please try again later.</p>');
+            });
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(totalResults / resultsPerPage);
+            $('#pageInfo').text(`Page ${currentPage} of ${totalPages}`);
+            $('#prevPage').prop('disabled', currentPage === 1);
+            $('#nextPage').prop('disabled', currentPage === totalPages);
+        }
+
+        function changePage(delta) {
+            searchShows(currentPage + delta);
+        }
+
+        function openPlayerPage(identifier) {
+            window.open(`player.html?id=${identifier}`, '_blank');
+        }
+
+        $(document).ready(function() {
+            const baseQuery = 'collection:(GratefulDead) AND mediatype:(etree) AND creator:(Grateful Dead)';
+
+            // Detect mobile devices
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+            // Set autocomplete only if not on mobile
+            if (!isMobile) {
+                $('#searchQuery').autocomplete({
+                    source: function(request, response) {
+                        $.getJSON(`https://archive.org/advancedsearch.php?q=${encodeURIComponent(baseQuery)} AND ${request.term}&fl[]=title&output=json`, function(data) {
+                            response(data.response.docs.map(item => item.title));
+                        });
+                    },
+                    minLength: 2,
+                    position: { my : "left top", at: "left bottom" },
+                    appendTo: ".search-container"
+                });
+
+                $('#venue').autocomplete({
+                    source: function(request, response) {
+                        $.getJSON(`https://archive.org/advancedsearch.php?q=${encodeURIComponent(baseQuery)} AND ${request.term}&fl[]=venue&output=json`, function(data) {
+                            response(Array.from(new Set(data.response.docs.map(item => item.venue).filter(Boolean))));
+                        });
+                    },
+                    minLength: 2,
+                    position: { my : "left top", at: "left bottom" },
+                    appendTo: ".search-container"
+                });
+            }
+
+            $('#yearFrom, #yearTo').attr({
+                'min': 1965,
+                'max': 1995
+            });
+
+            $('#yearFrom').val(1965);
+            $('#yearTo').val(1995);
+        });
+    </script>
+</body>
+</html>
