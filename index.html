@@ -3,60 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grateful Dead Show Finder</title>
-
-    <!-- Link to the external Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap" rel="stylesheet">
-    
-    <!-- Link to the jQuery UI CSS for autocomplete -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" rel="stylesheet">
-    
-    <!-- Link to the external CSS file -->
+    <title>Grateful Dead Tape Finder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-    <header>
-        <h1>Grateful Dead Tape Finder</h1>
+<body class="bg-gray-900 text-gray-100">
+    <header class="bg-gradient-to-r from-blue-900 to-gray-800 shadow">
+        <div class="max-w-4xl mx-auto px-4 py-6 text-center">
+            <h1 class="text-3xl font-bold text-white">Grateful Dead Tape Finder</h1>
+            <p class="text-gray-300 mt-2 text-sm">An interface to Archive's Grateful Dead collection</p>
+        </div>
     </header>
-    <main>
-        <div class="search-container">
-            <div class="search-header">
-                <input type="text" id="searchQuery" 
-                       placeholder="Enter Song, Taper, or something..." 
-                       autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-                <button onclick="searchShows()">
-                    <span class="button-icon">&#128269;</span> Search
+
+    <main class="max-w-4xl mx-auto p-4 space-y-6">
+        <!-- Enhanced Search Section -->
+        <div class="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-4 md:p-6 space-y-4">
+            <!-- Search Input with Icon Button -->
+            <div class="relative flex gap-2">
+                <div class="relative flex-1">
+                    <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" 
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input type="text" 
+                           id="searchQuery" 
+                           class="search-input w-full pl-12 pr-4 py-3 rounded-lg bg-gray-900 border border-gray-700 focus:border-blue-500 text-base md:text-lg" 
+                           placeholder="Search for shows, venues, or keywords...">
+                </div>
+                <button 
+                    id="searchButton"
+                    class="h-12 w-12 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                    title="Search">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
                 </button>
             </div>
-            <div class="filters">
-                <input type="number" id="yearFrom" placeholder="Year from" min="1965" max="1995" value="1965">
-                <input type="number" id="yearTo" placeholder="Year to" min="1965" max="1995" value="1995">
-                <input type="text" id="venue" placeholder="Venue">
-                <select id="sortOrder">
-                    <option value="avg_rating desc">Highest Rated</option>
-                    <option value="date desc">Newest first</option>
-                    <option value="date asc">Oldest first</option>
-                    <option value="downloads desc">Most Downloads</option>
-                </select>
+
+            <!-- Filters and Year Selection -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <!-- Filters Group -->
+                <div class="space-y-2 md:space-y-0 md:flex-1">
+                    <span class="text-sm text-gray-400 block md:mb-2">Filters:</span>
+                    <div class="flex flex-wrap gap-2">
+                        <button data-filter="five-star" class="filter-button hover:shadow-md transition-all whitespace-nowrap">Five Star</button>
+                        <button data-filter="soundboard" class="filter-button hover:shadow-md transition-all whitespace-nowrap">Soundboard</button>
+                        <button data-filter="aud" class="filter-button hover:shadow-md transition-all whitespace-nowrap">AUD</button>
+                        <button data-filter="matrix" class="filter-button hover:shadow-md transition-all whitespace-nowrap">Matrix</button>
+                    </div>
+                </div>
+
+                <!-- Year Selection Group -->
+                <div class="flex items-center gap-3 md:min-w-[280px]">
+                    <span class="text-sm text-gray-400 whitespace-nowrap">Year Range:</span>
+                    <div class="flex items-center gap-2">
+                        <select id="yearFrom" class="bg-gray-900 border border-gray-700 rounded-md px-2 py-1.5 text-sm text-gray-100 focus:border-blue-500 focus:outline-none min-w-[90px]">
+                            <option value="">From</option>
+                            <option value="1965">1965</option>
+                            <option value="1966">1966</option>
+                            <option value="1967">1967</option>
+                            <option value="1968">1968</option>
+                            <option value="1969">1969</option>
+                            <option value="1970">1970</option>
+                            <option value="1971">1971</option>
+                            <option value="1972">1972</option>
+                            <option value="1973">1973</option>
+                            <option value="1974">1974</option>
+                            <option value="1975">1975</option>
+                            <option value="1976">1976</option>
+                            <option value="1977">1977</option>
+                            <option value="1978">1978</option>
+                            <option value="1979">1979</option>
+                            <option value="1980">1980</option>
+                            <option value="1981">1981</option>
+                            <option value="1982">1982</option>
+                            <option value="1983">1983</option>
+                            <option value="1984">1984</option>
+                            <option value="1985">1985</option>
+                            <option value="1986">1986</option>
+                            <option value="1987">1987</option>
+                            <option value="1988">1988</option>
+                            <option value="1989">1989</option>
+                            <option value="1990">1990</option>
+                            <option value="1991">1991</option>
+                            <option value="1992">1992</option>
+                            <option value="1993">1993</option>
+                            <option value="1994">1994</option>
+                            <option value="1995">1995</option>
+                        </select>
+                        <span class="text-gray-400">-</span>
+                        <select id="yearTo" class="bg-gray-900 border border-gray-700 rounded-md px-2 py-1.5 text-sm text-gray-100 focus:border-blue-500 focus:outline-none min-w-[90px]">
+                            <option value="">To</option>
+                            <option value="1965">1965</option>
+                            <option value="1966">1966</option>
+                            <option value="1967">1967</option>
+                            <option value="1968">1968</option>
+                            <option value="1969">1969</option>
+                            <option value="1970">1970</option>
+                            <option value="1971">1971</option>
+                            <option value="1972">1972</option>
+                            <option value="1973">1973</option>
+                            <option value="1974">1974</option>
+                            <option value="1975">1975</option>
+                            <option value="1976">1976</option>
+                            <option value="1977">1977</option>
+                            <option value="1978">1978</option>
+                            <option value="1979">1979</option>
+                            <option value="1980">1980</option>
+                            <option value="1981">1981</option>
+                            <option value="1982">1982</option>
+                            <option value="1983">1983</option>
+                            <option value="1984">1984</option>
+                            <option value="1985">1985</option>
+                            <option value="1986">1986</option>
+                            <option value="1987">1987</option>
+                            <option value="1988">1988</option>
+                            <option value="1989">1989</option>
+                            <option value="1990">1990</option>
+                            <option value="1991">1991</option>
+                            <option value="1992">1992</option>
+                            <option value="1993">1993</option>
+                            <option value="1994">1994</option>
+                            <option value="1995">1995</option>
+                        </select>
+                    </div>
+                </div>
             </div>
-            <div id="loading">
-                <div id="loading-spinner"></div>
-                <p>Searching for shows...</p>
-            </div>
-            <div id="results"></div>
-            <div class="pagination">
-                <button id="prevPage" onclick="changePage(-1)" disabled>Previous</button>
-                <span id="pageInfo"></span>
-                <button id="nextPage" onclick="changePage(1)">Next</button>
-            </div>
+        </div>
+
+        <!-- Divider and Results Heading -->
+        <div class="border-t border-gray-700 pt-4">
+            <h2 class="text-xl font-semibold mb-2 text-gray-100 text-center">Search Results</h2>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="hidden flex justify-center mt-4">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        </div>
+
+        <!-- Results Container -->
+        <div id="results" class="mt-4 space-y-4 min-h-[200px]">
+            <!-- Results will appear here -->
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination flex flex-col sm:flex-row items-center justify-center gap-2 mt-4">
+            <button id="prevPage" class="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">Previous</button>
+            <span id="pageInfo" class="text-gray-300 text-sm"></span>
+            <button id="nextPage" class="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">Next</button>
+        </div>
+<!-- Favorites Section -->
+<div class="mt-8 bg-gray-800 border border-gray-700 rounded-lg p-6 space-y-4 shadow-lg">
+    <div class="flex justify-between items-center">
+        <h3 class="text-lg font-semibold text-white">Favorite Shows</h3>
+        <span id="favoritesCount" class="text-sm text-gray-400"></span>
+    </div>
+    <div id="favoritesList" class="space-y-2">
+        <!-- Favorites will be rendered here -->
+    </div>
+</div>
+
+
+
+        <!-- Tips Section -->
+        <div class="mt-8 bg-gray-800 border border-gray-700 rounded-lg p-6 space-y-4 text-gray-300 shadow-lg">
+            <h3 class="text-lg font-semibold text-white">Search Tips</h3>
+            <ul class="list-disc list-inside space-y-2">
+                <li>Use the year range to narrow down specific periods</li>
+                <li>Filter for high-quality recordings with the "Five Star" filter</li>
+                <li>Choose between soundboard (SBD), audience (AUD), or matrix recordings</li>
+                <li>Search by venue, city, or song titles</li>
+            </ul>
         </div>
     </main>
 
-    <!-- Include jQuery and jQuery UI for autocomplete and other functionalities -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <!-- Recently Viewed Shows -->
+    <div id="recentlyViewed"></div>
 
-    <!-- Link to the external JavaScript file -->
     <script src="scripts.js"></script>
+    <script src="features.js"></script>
+
+
 </body>
 </html>
