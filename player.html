@@ -1,197 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grateful Dead Show Player</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="styles.css">
-    <meta name="description" content="Listen to Grateful Dead concert recordings with an enhanced media player">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Show Player</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles.css">
+  
+  <meta name="description" content="Listen to concert recordings with an enhanced media player">
 </head>
 <body class="bg-gray-900 text-gray-100">
-    <header class="bg-gradient-to-r from-blue-900 to-gray-800 shadow">
-        <div class="max-w-4xl mx-auto px-4">
-            <h1 id="show-title" class="text-3xl font-bold text-center py-6 text-white">Loading Show...</h1>
-        </div>
-    </header>
+  <header class="bg-gradient-to-r from-blue-900 to-gray-800 shadow">
+    <div class="max-w-4xl mx-auto px-4">
+      <h1 id="show-title" class="text-3xl font-bold text-center py-6 text-white">Loading Show...</h1>
+    </div>
+  </header>
 
-    <main class="max-w-4xl mx-auto p-4 space-y-6">
-        <!-- Main Player Section -->
-        <div id="player-wrapper" class="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-4">
-            <div id="loading-placeholder" class="text-center py-12 text-gray-300">
-                Loading player...
+  <main class="max-w-4xl mx-auto p-4 space-y-6">
+    <div id="player-wrapper" class="glass-card p-6 relative">
+      <div id="trackLoading"
+           class="hidden absolute inset-0 flex items-center justify-center
+                  bg-gray-900 bg-opacity-75 text-white text-lg font-semibold z-10">
+        Loading track…
+      </div>
+
+      <div id="loading-placeholder" class="text-center py-12 text-gray-300">
+        Loading player...
+      </div>
+
+      <div id="custom-player" class="hidden">
+        <div class="border-b border-gray-700 pb-4 mb-4">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="text-lg font-semibold text-gray-100">Playlist</h3>
+            <div class="flex items-center space-x-2">
+              <span id="playlistInfo" class="text-sm text-gray-400"></span>
             </div>
-
-            <div id="custom-player" class="hidden">
-                <!-- Playlist -->
-                <div class="border-b border-gray-700 pb-4 mb-4">
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="text-lg font-semibold text-gray-100">Playlist</h3>
-                        <div class="flex items-center space-x-2">
-                            <span id="playlistInfo" class="text-sm text-gray-400"></span>
-                        </div>
-                    </div>
-                    <div id="playlistContainer" 
-                         class="playlist-container max-h-64 overflow-y-auto border border-gray-700 rounded-lg"
-                         role="list"
-                         aria-label="Track list"></div>
-                </div>
-
-                <!-- Waveform Visualization -->
-                <div id="waveform" class="h-24 bg-gray-900 rounded-lg mb-4 relative">
-                    <!-- Canvas for visualizer -->
-                    <canvas id="visualizerCanvas" class="absolute top-0 left-0 w-full h-full"></canvas>
-                </div>
-
-                <!-- Track Info Section -->
-                <div class="flex flex-col items-center mb-4">
-                    <h2 id="trackTitle" class="text-xl font-semibold text-gray-100 mb-1"></h2>
-                    <div id="trackInfo" class="text-sm text-gray-400"></div>
-                </div>
-
-                <!-- Progress & Times -->
-                <div class="flex items-center space-x-2 px-4 mb-4">
-                    <span id="currentTime" class="text-sm font-mono text-gray-400 w-12 text-right">0:00</span>
-                    <div class="relative flex-1 group">
-                        <div class="absolute w-full h-1.5 bg-gray-700 rounded-full">
-                            <div id="bufferBar" class="absolute h-full bg-gray-600 rounded-full" style="width: 0%"></div>
-                            <div id="progressBar" class="absolute h-full bg-blue-500 rounded-full" style="width: 0%"></div>
-                        </div>
-                        <input type="range" 
-                               id="trackProgress" 
-                               class="absolute w-full h-1.5 opacity-0 cursor-pointer" 
-                               min="0" 
-                               max="100" 
-                               value="0">
-                    </div>
-                    <span id="totalTime" class="text-sm font-mono text-gray-400 w-12">0:00</span>
-                </div>
-
-                <!-- Main Controls -->
-                <div class="flex flex-col space-y-4 mb-6">
-                    <div class="flex items-center justify-center space-x-6">
-                        <!-- Shuffle -->
-                        <button id="shuffleButton" 
-                                class="player-button text-gray-400 hover:text-white p-2" 
-                                title="Shuffle (Off)"
-                                aria-label="Toggle shuffle">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                      d="M8 7h12m-12 10h12M8 12h12" />
-                            </svg>
-                        </button>
-
-                        <!-- Previous -->
-                        <button id="prevTrack" 
-                                class="player-button p-2" 
-                                title="Previous Track"
-                                aria-label="Previous track">
-                            <svg class="w-6 h-6 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M12.29 5.21l-5 5a1 1 0 000 1.42l5 5M19 5l-5 5 5 5" />
-                            </svg>
-                        </button>
-
-                        <!-- Play/Pause -->
-                        <button id="playPause" 
-                                class="player-button bg-blue-600 hover:bg-blue-500 w-14 h-14 rounded-full flex items-center justify-center transform transition-transform active:scale-95" 
-                                title="Play"
-                                aria-label="Play or pause">
-                            <svg id="playIcon" class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z" />
-                            </svg>
-                        </button>
-
-                        <!-- Next -->
-                        <button id="nextTrack" 
-                                class="player-button p-2" 
-                                title="Next Track"
-                                aria-label="Next track">
-                            <svg class="w-6 h-6 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M4.709 5.21l5 5-5 5M11 5l5 5-5 5" />
-                            </svg>
-                        </button>
-
-                        <!-- Loop -->
-                        <button id="loopButton" 
-                                class="player-button text-gray-400 hover:text-white p-2" 
-                                title="Loop Mode: Off"
-                                aria-label="Toggle loop mode">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <!-- Volume -->
-                    <div class="flex items-center justify-center space-x-2">
-                        <button id="muteButton" 
-                                class="text-gray-400 hover:text-white p-1"
-                                aria-label="Toggle mute">
-                            <svg id="volumeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                      d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M12 18.012l-7-4.2V10.2l7-4.2v12.012z" />
-                            </svg>
-                        </button>
-                        <div class="relative w-24 group">
-                            <div class="absolute w-full h-1.5 bg-gray-700 rounded-full">
-                                <div id="volumeBar" class="absolute h-full bg-blue-500 rounded-full" style="width: 100%"></div>
-                            </div>
-                            <input type="range" 
-                                   id="volumeControl" 
-                                   class="absolute w-full h-1.5 opacity-0 cursor-pointer" 
-                                   min="0" 
-                                   max="100" 
-                                   value="100"
-                                   aria-label="Volume control">
-                        </div>
-                    </div>
-                </div>
-
-<audio id="audioElement" class="hidden" crossorigin="anonymous"></audio>
+          </div>
+          <div id="playlistContainer"
+               class="playlist-container max-h-64 overflow-y-auto border border-gray-700 rounded-lg"
+               role="list"
+               aria-label="Track list">
             </div>
         </div>
 
-        <!-- Show Information Section -->
-        <div class="grid md:grid-cols-2 gap-6">
-            <div id="show-info" class="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-6"></div>
-            <div id="additional-info" class="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-6"></div>
+        <div id="waveform" class="h-24 bg-gray-900 rounded-lg mb-4 relative">
+          <canvas id="visualizerCanvas" class="absolute top-0 left-0 w-full h-full"></canvas>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="flex justify-center gap-4">
-            <a id="archive-link" 
-               href="#" 
-               target="_blank" 
-               rel="noopener noreferrer"
-               class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-                View on Archive.org
-            </a>
-            <a href="index.html" 
-               class="inline-flex items-center px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                          d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to Search
-            </a>
+        <div class="flex flex-col items-center mb-4">
+          <h2 id="trackTitle" class="text-xl font-semibold text-gray-100 mb-1"></h2>
+          <div id="trackInfo" class="text-sm text-gray-400"></div>
         </div>
 
-        <!-- Keyboard Shortcuts Info -->
-        <div class="text-sm text-gray-400 text-center">
-            <p>Keyboard shortcuts: Space/K (Play/Pause), ←/→ (Skip 5s), J/L (Skip 10s), M (Mute), N (Next), P (Previous)</p>
+        <div class="flex items-center space-x-2 px-4 mb-4">
+          <span id="currentTime" class="text-sm font-mono text-gray-400 w-12 text-right">0:00</span>
+          <div class="relative flex-1 group">
+            <div class="absolute w-full h-1.5 bg-gray-700 rounded-full">
+              <div id="bufferBar" class="absolute h-full bg-gray-600 rounded-full" style="width: 0%"></div>
+              <div id="progressBar" class="absolute h-full bg-blue-500 rounded-full" style="width: 0%"></div>
+            </div>
+            <input type="range"
+                   id="trackProgress"
+                   class="absolute w-full h-1.5 opacity-0 cursor-pointer"
+                   min="0"
+                   max="100"
+                   value="0">
+          </div>
+          <span id="totalTime" class="text-sm font-mono text-gray-400 w-12">0:00</span>
         </div>
-    </main>
 
-    <script src="scripts.js"></script>
-    <script src="features.js"></script>
+        <div class="flex flex-col space-y-4 mb-6">
+          <div class="flex items-center justify-center space-x-6">
+            <button id="shuffleButton" class="player-button text-gray-400 hover:text-white p-2" title="Shuffle (Off)" aria-label="Toggle shuffle">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m-12 10h12M8 12h12" /></svg>
+            </button>
+            <button id="prevTrack" class="player-button p-2" title="Previous Track" aria-label="Previous track">
+              <svg class="w-6 h-6 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12.29 5.21l-5 5a1 1 0 000 1.42l5 5M19 5l-5 5 5 5" /></svg>
+            </button>
+            <button id="playPause" class="player-button btn-accent w-14 h-14 rounded-full flex items-center justify-center transform transition-transform active:scale-95" title="Play" aria-label="Play or pause">
+              <svg id="playIcon" class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z" /></svg>
+            </button>
+            <button id="nextTrack" class="player-button p-2" title="Next Track" aria-label="Next track">
+              <svg class="w-6 h-6 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.709 5.21l5 5-5 5M11 5l5 5-5 5" /></svg>
+            </button>
+            <button id="loopButton" class="player-button text-gray-400 hover:text-white p-2" title="Loop Mode: Off" aria-label="Toggle loop mode">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            </button>
+          </div>
 
+          <div class="flex items-center justify-center space-x-2">
+            <button id="muteButton" class="text-gray-400 hover:text-white p-1" aria-label="Toggle mute">
+              <svg id="volumeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M12 18.012l-7-4.2V10.2l7-4.2v12.012z" /></svg>
+            </button>
+            <div class="relative w-24 group">
+              <div class="absolute w-full h-1.5 bg-gray-700 rounded-full">
+                <div id="volumeBar" class="absolute h-full bg-blue-500 rounded-full" style="width: 100%"></div>
+              </div>
+              <input type="range" id="volumeControl" class="absolute w-full h-1.5 opacity-0 cursor-pointer" min="0" max="100" value="100" aria-label="Volume control">
+            </div>
+          </div>
+        </div>
 
+        <audio id="audioElement" class="hidden" crossorigin="anonymous"></audio>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <div id="show-info" class="glass-card p-6"></div>
+      <div id="additional-info" class="glass-card p-6"></div>
+    </div>
+
+    <div class="flex justify-center gap-4">
+      <a id="archive-link" href="#" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-6 py-3 btn-accent rounded-2xl transition focus:outline-none focus:ring-2 focus:ring-offset-2">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+        View on Archive.org
+      </a>
+      <a href="index.html" class="inline-flex items-center px-6 py-3 glass-card transition-transform transform hover:scale-105 rounded-2xl focus:outline-none focus:ring-2 focus:ring-offset-2">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+        Back to Search
+      </a>
+    </div>
+
+    <div class="text-sm text-gray-400 text-center">
+      <p>Keyboard shortcuts: Space/K (Play/Pause), ←/→ (Skip 5s), J/L (Skip 10s), M (Mute), N (Next), P (Previous)</p>
+    </div>
+  </main>
+
+  <script src="scripts.js"></script>
+
+  <script>
+    (function(){
+      // This IIFE (Immediately Invoked Function Expression) runs on page load to handle
+      // deep-linking to specific tracks and enabling auto-play.
+
+      // 1) Read the `?track=N` URL parameter and set the starting track index.
+      // This happens before the main player initialization.
+      const params = new URLSearchParams(window.location.search);
+      const t = parseInt(params.get('track'), 10);
+      if (!isNaN(t) && t > 0) {
+        // `window.currentIndex` is used by the main `scripts.js` file.
+        // We subtract 1 because URLs are 1-based, and array indices are 0-based.
+        window.currentIndex = t - 1;
+      }
+
+      // 2) Wrap the main `initializePlayer` function to add auto-play functionality.
+      // This is a common pattern to extend existing functions without modifying their source code.
+      const origInit = window.initializePlayer;
+      window.initializePlayer = async function() {
+        // Run the original initialization function first.
+        await origInit();
+        // After the player is ready, attempt to play the audio.
+        // A try-catch block handles cases where autoplay is blocked by the browser.
+        try { document.getElementById('audioElement').play(); } catch(e){}
+      };
+
+      // 3) Wrap the `loadTrack` function to update the URL whenever a new track is loaded.
+      // This ensures the URL always reflects the currently playing track.
+      const origLoad = window.loadTrack;
+      window.loadTrack = function(i) {
+        // Call the original track loading logic.
+        origLoad(i);
+        // Update the URL's `?track=` parameter without reloading the page.
+        try {
+          const q = new URLSearchParams(window.location.search);
+          q.set('track', i + 1); // Use 1-based index for the URL.
+          history.replaceState(null, '', window.location.pathname + '?' + q);
+        } catch(e){}
+      };
+
+      // 4) Kick off the player initialization process once the DOM is ready.
+      document.addEventListener('DOMContentLoaded', () => {
+        window.initializePlayer();
+      });
+    })();
+  </script>
 </body>
 </html>
