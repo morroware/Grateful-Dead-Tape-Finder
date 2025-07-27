@@ -398,7 +398,7 @@
       document.getElementById('ogTitle').content       = title;
       document.getElementById('ogDesc').content        = desc;
       document.getElementById('ogUrl').content         = window.location.href;
-      // og:image can be set to a default image URL here if desired.
+      // og:image can be set to a default image URL here if desired
     }
 
     /**
@@ -423,7 +423,7 @@
 
     // Set up event listeners once the DOM is fully loaded.
     document.addEventListener('DOMContentLoaded', () => {
-      // Pre-fill form from URL parameters.
+      // Prefill form from URL parameters.
       readURLParams();
 
       // If the URL has any search parameters, trigger a search immediately on load.
@@ -448,6 +448,7 @@
         btn.addEventListener('click', () => {
           updateURLandMeta();
           // The main searchShows function will read the active filter.
+          // The click handler in scripts.js already calls searchShows(1).
         });
       });
     });
