@@ -5,11 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Grateful Dead Tape Finder</title>
 
+  <!-- Tailwind + Styles -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="styles.css">
 
+  <!-- Basic description -->
   <meta name="description" content="An interface to Archive's Grateful Dead collection">
 
+  <!-- OPEN GRAPH / TWITTER CARD TAGS -->
+  <!-- These will be updated dynamically to reflect the current search -->
   <meta property="og:title" content="Grateful Dead Tape Finder" id="ogTitle">
   <meta property="og:description" content="An interface to Archive's Grateful Dead collection" id="ogDesc">
   <meta property="og:url" content="" id="ogUrl">
@@ -25,9 +29,12 @@
   </header>
 
   <main class="max-w-4xl mx-auto p-4 space-y-6">
+    <!-- Enhanced Search Section -->
     <div class="glass-card p-6 space-y-6">
 
+      <!-- JS-handled Search Form -->
       <form id="searchForm" class="space-y-4">
+        <!-- Search Input with Icon & Submit Button -->
         <div class="relative flex gap-2">
           <div class="relative flex-1">
             <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none"
@@ -56,7 +63,9 @@
           </button>
         </div>
 
+        <!-- Band + Year Selection -->
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <!-- Band Selection -->
           <div class="space-y-2 md:space-y-0 md:flex-1">
             <span class="text-sm text-gray-400 block md:mb-2">Select Band:</span>
             <select id="bandSelector" name="band"
@@ -177,6 +186,7 @@
             </select>
           </div>
 
+          <!-- Year Range -->
           <div class="flex items-center gap-3 md:min-w-[280px]">
             <span class="text-sm text-gray-400 whitespace-nowrap">Year Range:</span>
             <div class="flex items-center gap-2">
@@ -316,6 +326,7 @@
         </div>
       </form>
 
+      <!-- Filters (recording types) -->
       <div class="flex flex-wrap gap-2">
         <button type="button" data-filter="five-star" class="filter-button">Five Star</button>
         <button type="button" data-filter="soundboard" class="filter-button">Soundboard</button>
@@ -324,23 +335,29 @@
       </div>
     </div>
 
+    <!-- Divider and Results Heading -->
     <div class="border-t border-gray-700 pt-4">
       <h2 class="text-xl font-semibold mb-2 text-gray-100 text-center">Search Results</h2>
     </div>
 
+    <!-- Loading Indicator -->
     <div id="loading" class="hidden flex justify-center mt-4">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
     </div>
 
+    <!-- Results Container -->
     <div id="results" class="mt-4 space-y-4 min-h-[200px]">
-      </div>
+      <!-- Results will appear here -->
+    </div>
 
+    <!-- Pagination -->
     <div class="pagination flex flex-col sm:flex-row items-center justify-center gap-2 mt-4">
       <button id="prevPage" class="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">Previous</button>
       <span id="pageInfo" class="text-gray-300 text-sm"></span>
       <button id="nextPage" class="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">Next</button>
     </div>
 
+    <!-- Tips Section -->
     <div class="mt-8 bg-gray-800 border border-gray-700 rounded-lg p-6 space-y-4 text-gray-300 shadow-lg">
       <h3 class="text-lg font-semibold text-white">Search Tips</h3>
       <ul class="list-disc list-inside space-y-2">
@@ -352,12 +369,15 @@
     </div>
   </main>
 
+  <!-- Recently Viewed Shows -->
   <div id="recentlyViewed"></div>
 
+  <!-- Scripts -->
   <script src="scripts.js"></script>
+  <!-- <script src="features.js"></script> -->
 
   <script>
-    // Grab all the interactive form controls
+    // Grab all the controls
     const form           = document.getElementById('searchForm');
     const searchQuery    = document.getElementById('searchQuery');
     const bandSelector   = document.getElementById('bandSelector');
@@ -365,10 +385,7 @@
     const yearTo         = document.getElementById('yearTo');
     const filterButtons  = Array.from(document.querySelectorAll('[data-filter]'));
 
-    /**
-     * Updates the browser's URL and social media meta tags based on the current form state.
-     * This allows users to share a URL that represents their exact search query.
-     */
+    // Update the URL & OG tags to match the current form state
     function updateURLandMeta() {
       const params = new URLSearchParams();
       if (searchQuery.value)  params.set('searchQuery', searchQuery.value);
@@ -378,10 +395,10 @@
       const activeFilter = document.querySelector('[data-filter].bg-blue-500');
       if (activeFilter) params.set('filter', activeFilter.dataset.filter);
 
-      // Replace the current history state with the new URL; this doesn't trigger a page reload.
+      // Push new URL (no reload)
       history.replaceState(null, '', `?${params}`);
 
-      // Build a descriptive title and description for social sharing based on the search parameters.
+      // Build a rich OG title/description from the form
       const title = searchQuery.value
         ? `Search “${searchQuery.value}” in ${bandSelector.selectedOptions[0].text}`
         : `${bandSelector.selectedOptions[0].text} Tape Finder`;
@@ -394,17 +411,14 @@
       }
       const desc = parts.length ? parts.join(' · ') : 'Explore concert recordings.';
 
-      // Update the Open Graph (og:*) and Twitter meta tags in the document's head.
+      // Update OG/Twitter meta tags
       document.getElementById('ogTitle').content       = title;
       document.getElementById('ogDesc').content        = desc;
       document.getElementById('ogUrl').content         = window.location.href;
-      // og:image can be set to a default image URL here if desired
+      // ogImage left blank or set a default image URL here if desired
     }
 
-    /**
-     * Reads the URL's query parameters on page load and pre-fills the search form.
-     * This allows bookmarked or shared URLs to restore the search state.
-     */
+    // Read URL params to prefill the form on load
     function readURLParams() {
       const params = new URLSearchParams(window.location.search);
       if (params.has('searchQuery')) searchQuery.value = params.get('searchQuery');
@@ -421,34 +435,32 @@
       }
     }
 
-    // Set up event listeners once the DOM is fully loaded.
     document.addEventListener('DOMContentLoaded', () => {
-      // Prefill form from URL parameters.
+      // Prefill from URL
       readURLParams();
 
-      // If the URL has any search parameters, trigger a search immediately on load.
+      // If any param present, run search immediately
       if (new URLSearchParams(window.location.search).toString()) {
         searchShows(1);
       }
 
-      // When the form is submitted, prevent the default page reload, update the URL, and then search.
+      // On form submit: prevent normal reload, sync URL/meta, then search
       form.addEventListener('submit', e => {
         e.preventDefault();
         updateURLandMeta();
         searchShows(1);
       });
 
-      // When band or year selectors change, update the URL and trigger a new search.
+      // On band/year changes: sync and search
       bandSelector.addEventListener('change', () => { updateURLandMeta(); searchShows(1); });
       yearFrom.addEventListener('change',    () => { updateURLandMeta(); searchShows(1); });
       yearTo.addEventListener('change',      () => { updateURLandMeta(); searchShows(1); });
 
-      // When a filter button is clicked, let the main script handle class toggling, then update URL and search.
+      // On filter clicks: toggle classes in scripts.js, then sync & search
       filterButtons.forEach(btn => {
         btn.addEventListener('click', () => {
           updateURLandMeta();
-          // The main searchShows function will read the active filter.
-          // The click handler in scripts.js already calls searchShows(1).
+          searchShows(1);
         });
       });
     });

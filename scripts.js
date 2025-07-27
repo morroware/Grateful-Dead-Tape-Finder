@@ -1,3 +1,5 @@
+// scripts.js
+
 // Global variables for search functionality
 let currentPage = 1;
 const resultsPerPage = 10;
@@ -35,7 +37,6 @@ let visualizerCanvas, visualizerCtx;
 })();
 
 // Robust updateRecentlyViewed(...)
-// Adds a show to the 'recently viewed' list in localStorage.
 function updateRecentlyViewed(show) {
     if (!show || !show.identifier) {
         console.error('Invalid show data for recently viewed');
@@ -51,13 +52,11 @@ function updateRecentlyViewed(show) {
         stored = [];
     }
 
-    // Remove any existing entry for this show to move it to the top.
     stored = stored.filter(s => s.identifier !== show.identifier);
     stored.unshift({
         identifier: show.identifier,
         title: show.title || 'Unknown Show'
     });
-    // Keep the list at a max of 5 items.
     if (stored.length > 5) stored.pop();
 
     try {
@@ -70,7 +69,6 @@ function updateRecentlyViewed(show) {
 }
 
 // renderRecentlyViewed()
-// Renders the list of recently viewed shows to the DOM.
 function renderRecentlyViewed() {
     const container = document.getElementById('recentlyViewed');
     if (!container || recentlyViewed.length === 0) return;
@@ -88,7 +86,6 @@ function renderRecentlyViewed() {
 }
 
 // debounce helper
-// A utility function to limit the rate at which a function gets called.
 function debounce(func, wait) {
     let timeout;
     return function(...args) {
@@ -98,7 +95,6 @@ function debounce(func, wait) {
 }
 
 // show/hide loading skeletons
-// Displays skeleton loaders while search results are being fetched.
 function showLoading() {
     const loadingEl = document.getElementById('loading');
     if (loadingEl) loadingEl.classList.remove('hidden');
@@ -116,14 +112,12 @@ function showLoading() {
         }
     }
 }
-// Hides the loading skeleton loaders.
 function hideLoading() {
     const loadingEl = document.getElementById('loading');
     if (loadingEl) loadingEl.classList.add('hidden');
 }
 
 // createShowCard
-// Generates the HTML for a single show result card.
 function createShowCard(show) {
     const src = show.source ? show.source.toLowerCase() : '';
     const isSbd = src.includes('soundboard') || src.includes('sbd');
@@ -152,7 +146,6 @@ function createShowCard(show) {
 }
 
 // updatePagination
-// Updates the pagination UI with the current page and total pages.
 function updatePagination() {
     const totalPages = Math.ceil(totalResults / resultsPerPage);
     const pageInfo = document.getElementById('pageInfo');
@@ -166,7 +159,6 @@ function updatePagination() {
 
 // searchShows - Updated to support verified bands with substantial collections
 // searchShows - Fixed search queries for bands with specific collection structures
-// Fetches show data from the Internet Archive based on the current search filters.
 async function searchShows(page = 1) {
     const searchQueryInput = document.getElementById('searchQuery');
     const yearFromInput    = document.getElementById('yearFrom');
@@ -181,7 +173,7 @@ async function searchShows(page = 1) {
     showLoading();
     currentPage = page;
     
-    // Customize the API query based on the selected band.
+    // Customize query based on band selection
     let baseQuery = '';
     let bandTitle = '';
     
@@ -215,15 +207,17 @@ async function searchShows(page = 1) {
             baseQuery = 'collection:(TheDead) AND mediatype:(etree)';
             bandTitle = 'The Dead';
             break;
-        case 'Other':
-            // Use Archive.org's full-text metadata search within etree
-            if (query) {
-                baseQuery = `${query} AND mediatype:"etree"`;
-            } else {
-                baseQuery = `mediatype:"etree"`;
-            }
-            bandTitle = 'Custom Search';
-            break;
+       case 'Other':
+    // Use Archive.org's full-text metadata search within etree
+case 'Other':
+  if (query) {
+    baseQuery = `${query} AND mediatype:"etree"`;
+  } else {
+    baseQuery = `mediatype:"etree"`;
+  }
+  bandTitle = 'Custom Search';
+  break;
+
         case 'MelvinSeals':
             baseQuery = 'collection:(MelvinSeals) AND mediatype:(etree)';
             bandTitle = 'Melvin Seals';
@@ -685,8 +679,8 @@ async function searchShows(page = 1) {
     }
     
    if (band !== 'Other' && query) {
-        baseQuery += ` AND (${query})`;
-    }
+  baseQuery += ` AND (${query})`;
+}
     if (yearFrom) baseQuery += ` AND year:[${yearFrom} TO ${yearTo || '*'}]`;
     else if (band === 'GratefulDead' && !yearFrom) baseQuery += ' AND year:[1965 TO 1995]';
     else baseQuery += ' AND year:[1965 TO 2025]'; // Default year range for other bands
@@ -725,7 +719,7 @@ async function searchShows(page = 1) {
         updatePagination();
     } catch (error) {
         console.error('Search error:', error);
-        hideLoading();  // ensure spinner always hides
+        hideLoading();  // ← ensure spinner always hides
         const resultsDiv = document.getElementById('results');
         if (resultsDiv) resultsDiv.innerHTML = `
             <p class="text-center text-red-500 my-8">
@@ -733,19 +727,15 @@ async function searchShows(page = 1) {
             </p>`;
     }
 }
-
 // pagination controls
-// Changes the current page of search results.
 function changePage(delta) {
     searchShows(currentPage + delta);
 }
-// Navigates to the player page for a given show identifier.
 function openPlayerPage(identifier) {
     window.location.href = `player.html?id=${identifier}`;
 }
-
 // initializePlayer
-// Fetches all metadata for a specific show and sets up the player UI.
+// initializePlayer
 async function initializePlayer() {
   // 1) Read URL params
   const params     = new URLSearchParams(window.location.search);
@@ -803,7 +793,7 @@ async function initializePlayer() {
     }));
     originalPlaylist = [...playlist];
 
-    // 8) Start on ?track=N if valid, otherwise 0
+    // 8) **NEW**: start on ?track=N if valid, otherwise 0
     if (!isNaN(trackParam) && trackParam > 0 && trackParam <= playlist.length) {
       currentIndex = trackParam - 1;
     } else {
@@ -831,7 +821,6 @@ async function initializePlayer() {
 
 
 // updateShowInfo
-// Populates the show details and additional information sections.
 function updateShowInfo(data) {
     const si = document.getElementById('show-info');
     if (si) si.innerHTML = `
@@ -853,7 +842,6 @@ function updateShowInfo(data) {
 }
 
 // setupPlayerUI
-// Gets references to all player DOM elements and attaches event listeners.
 function setupPlayerUI() {
     const loadingPlaceholder = document.getElementById('loading-placeholder');
     const customPlayer       = document.getElementById('custom-player');
@@ -907,7 +895,6 @@ function setupPlayerUI() {
 }
 
 // initializeAudioContext + drawVisualizer
-// Sets up the Web Audio API for the visualizer.
 function initializeAudioContext() {
     if (!audioContext) {
         try {
@@ -929,8 +916,7 @@ function initializeAudioContext() {
         audioContext.resume().catch(e => console.error('AudioContext resume error:', e));
     }
 }
-
-// The animation loop for drawing the frequency data to the canvas.
+// scripts.js — replace your existing drawVisualizer() with this:
 function drawVisualizer() {
   requestAnimationFrame(drawVisualizer);
 
@@ -940,7 +926,7 @@ function drawVisualizer() {
   const width  = visualizerCanvas.width  = visualizerCanvas.clientWidth;
   const height = visualizerCanvas.height = visualizerCanvas.clientHeight;
 
-  // Smooth trailing blur effect
+  // Smooth trailing blur
   visualizerCtx.fillStyle = 'rgba(0, 0, 0, 0.06)';
   visualizerCtx.fillRect(0, 0, width, height);
   visualizerCtx.globalCompositeOperation = 'lighter';
@@ -949,7 +935,7 @@ function drawVisualizer() {
   const barWidth = width / barCount * 2;
   const time = Date.now() * 0.003;
 
-  // Global metrics for visual variation
+  // Global metrics
   const volume = dataArray.reduce((a, b) => a + b, 0) / bufferLength;
   const intensity = dataArray.filter((v, i) => i % 8 === 0).reduce((a, b) => a + b, 0) / (bufferLength / 8);
 
@@ -960,7 +946,7 @@ function drawVisualizer() {
 
     const x = i * barWidth * 0.6 + Math.sin(i * 0.1 + time * 4) * 2;
 
-    // Multi-layer color shifting for a psychedelic effect
+    // Multi-layer color shifting: hue is a sum of 3 oscillations
     const hue = (i * 2 + time * 80 + Math.sin(i * 0.3 + time) * 60 + (volume * 0.8)) % 360;
     const saturation = 85 + Math.sin(time + i * 0.15) * 10;
     const light = 40 + eased * 45 + Math.sin(i + time * 0.5) * 5;
@@ -972,7 +958,7 @@ function drawVisualizer() {
 
     visualizerCtx.fillStyle = gradient;
 
-    // Draw a bar with a rounded top
+    // Round top rectangle
     visualizerCtx.beginPath();
     visualizerCtx.moveTo(x, height);
     visualizerCtx.lineTo(x, height - barHeight + 10);
@@ -988,7 +974,6 @@ function drawVisualizer() {
 }
 
 // loadTrack
-// Loads a specific track into the audio element by its index.
 function loadTrack(index) {
     const track = playlist[index];
     if (!track) {
@@ -1011,7 +996,6 @@ function loadTrack(index) {
 }
 
 // renderPlaylist
-// Generates and injects the HTML for the track playlist.
 function renderPlaylist() {
     if (!playlistContainer) return;
     playlistContainer.innerHTML = playlist.map((track, i) => `
@@ -1034,7 +1018,6 @@ function renderPlaylist() {
 }
 
 // highlightCurrentTrack
-// Applies special styling to the currently active track in the playlist.
 function highlightCurrentTrack() {
     if (!playlistContainer) return;
     Array.from(playlistContainer.children).forEach((el, i) => {
@@ -1063,8 +1046,8 @@ function highlightCurrentTrack() {
 }
 
 // play/pause, next, prev, etc.
+// play/pause wrapper
 // play/pause wrapper: always let play/pause go through
-// Wrapper to ensure AudioContext is active before playing.
 function playPauseWrapper() {
   if (!audioContext || audioContext.state === 'suspended') {
     initializeAudioContext();
@@ -1072,7 +1055,6 @@ function playPauseWrapper() {
   playPause();
 }
 
-// Toggles the audio between play and pause states.
 function playPause() {
     if (playerState === 'playing') {
         audio.pause();
@@ -1092,9 +1074,9 @@ function playPause() {
     updatePlayerControls();
     highlightCurrentTrack();
 }
-
+// next track
 // === NEXT TRACK ===
-// Skips to the next track in the playlist.
+// === NEXT TRACK ===
 function nextTrack() {
   // cancel any in-flight load
   audio.pause();
@@ -1122,7 +1104,6 @@ function nextTrack() {
 }
 
 // === PREVIOUS TRACK ===
-// Goes to the previous track or rewinds the current one.
 function prevTrack() {
   // cancel any in-flight load
   audio.pause();
@@ -1155,7 +1136,6 @@ function prevTrack() {
 }
 
 // handle end
-// Logic for what happens when a track finishes playing.
 function handleTrackEnd() {
     if (loopMode === 'one') {
         audio.currentTime = 0;
@@ -1170,7 +1150,6 @@ function handleTrackEnd() {
 }
 
 // updateProgress, buffer, times
-// Updates the track progress bar and time displays.
 function updateProgress() {
     if (!audio.duration) return;
     const pct = (audio.currentTime / audio.duration) * 100;
@@ -1179,11 +1158,9 @@ function updateProgress() {
     if (pb) pb.style.width = `${pct}%`;
     if (currentTimeEl) currentTimeEl.textContent = formatTime(audio.currentTime);
 }
-// Sets the total time display when a track loads.
 function updateTotalTime() {
     if (totalTimeEl) totalTimeEl.textContent = formatTime(audio.duration);
 }
-// Seeks the audio to a new position based on the progress bar input.
 function seekTrack(e) {
     const t = (e.target.value / 100) * audio.duration;
     if (!isNaN(t)) {
@@ -1191,7 +1168,6 @@ function seekTrack(e) {
         updateProgress();
     }
 }
-// Updates the visual representation of how much of the track is buffered.
 function updateBufferProgress() {
     if (!audio.buffered.length) return;
     const bb = document.getElementById('bufferBar');
@@ -1202,7 +1178,6 @@ function updateBufferProgress() {
 }
 
 // mute & volume
-// Toggles the audio mute state.
 function toggleMute() {
     if (audio.volume > 0) {
         lastVolume = audio.volume;
@@ -1212,14 +1187,12 @@ function toggleMute() {
     }
     updateVolumeUI();
 }
-// Handles volume changes from the slider.
 function handleVolumeChange(e) {
     const vol = e.target.value / 100;
     audio.volume = vol;
     lastVolume = vol;
     updateVolumeUI();
 }
-// Updates the volume slider and icon UI.
 function updateVolumeUI() {
     const icon = document.getElementById('volumeIcon');
     const bar  = document.getElementById('volumeBar');
@@ -1228,16 +1201,15 @@ function updateVolumeUI() {
     bar.style.width = `${audio.volume * 100}%`;
     ctrl.value     = audio.volume * 100;
     if (audio.volume === 0) {
-        icon.innerHTML = `<path stroke-linecap="round" .../>`; // Mute icon
+        icon.innerHTML = `<path stroke-linecap="round" .../>`;
     } else if (audio.volume < 0.5) {
-        icon.innerHTML = `<path stroke-linecap="round" ... low/>`; // Low volume icon
+        icon.innerHTML = `<path stroke-linecap="round" ... low/>`;
     } else {
-        icon.innerHTML = `<path stroke-linecap="round" ... high/>`; // High volume icon
+        icon.innerHTML = `<path stroke-linecap="round" ... high/>`;
     }
 }
 
 // shuffle & loop
-// Toggles shuffle mode on and off.
 function toggleShuffle() {
     const btn = document.getElementById('shuffleButton');
     if (!btn) return;
@@ -1250,7 +1222,6 @@ function toggleShuffle() {
     renderPlaylist();
     highlightCurrentTrack();
 }
-// Cycles through the loop modes (none, one, all).
 function toggleLoop() {
     const btn = document.getElementById('loopButton');
     if (!btn) return;
@@ -1262,7 +1233,6 @@ function toggleLoop() {
 
 // updatePlayerControls
 // Fix for the updatePlayerControls function
-// Updates the state of the player controls (e.g., play/pause icon, disabled buttons).
 function updatePlayerControls() {
     if (!playIcon) return;
     
@@ -1306,9 +1276,10 @@ function updateLoadingState() {
     updatePlayerControls();
 }
 
+// selectTrack
 // direct track selection from playlist
+// === SELECT TRACK BY CLICK ===
 // === SELECT A TRACK FROM THE LIST ===
-// Handles direct track selection from the playlist UI.
 function selectTrack(i) {
   // cancel any in-flight load
   audio.pause();
@@ -1333,12 +1304,10 @@ function selectTrack(i) {
   highlightCurrentTrack();
 }
 // playlist info & utilities
-// Updates the text showing the total number of tracks.
 function updatePlaylistInfo() {
     const pi = document.getElementById('playlistInfo');
     if (pi) pi.textContent = `${playlist.length} tracks`;
 }
-// Formats seconds into a M:SS or H:MM:SS string.
 function formatTime(sec) {
     if (!sec || isNaN(sec)) return '0:00';
     const h = Math.floor(sec / 3600),
@@ -1347,7 +1316,6 @@ function formatTime(sec) {
     if (h > 0) return `${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
     return `${m}:${s.toString().padStart(2,'0')}`;
 }
-// Shuffles an array using the Fisher-Yates algorithm. Returns a new array.
 function shuffleArray(arr) {
     const a = [...arr];
     for (let i = a.length - 1; i > 0; i--) {
@@ -1358,7 +1326,6 @@ function shuffleArray(arr) {
 }
 
 // showPlayerError / retryCurrentTrack
-// Displays an error message in the player UI.
 function showPlayerError(msg) {
     const pw = document.getElementById('player-wrapper');
     if (!pw) return;
@@ -1379,7 +1346,6 @@ function showPlayerError(msg) {
     if (existing) existing.remove();
     pw.insertBefore(err, pw.firstChild);
 }
-// Retries loading the current track after an error.
 function retryCurrentTrack() {
     const e = document.querySelector('.bg-red-800');
     if (e) e.remove();
@@ -1388,12 +1354,10 @@ function retryCurrentTrack() {
 }
 
 // search click & enter
-// Handles the search button click event.
 function handleSearchClick() {
     const qi = document.getElementById('searchQuery');
     if (qi) { qi.blur(); searchShows(1); }
 }
-// Handles the 'Enter' key press in the search input.
 function handleSearchKeyPress(e) {
     if (e.key === 'Enter') {
         e.preventDefault();
@@ -1403,14 +1367,10 @@ function handleSearchKeyPress(e) {
 }
 
 // keyboard controls
-// Sets up global keyboard shortcuts for the media player.
 function setupKeyboardControls() {
     document.addEventListener('keydown', e => {
         const cp = document.getElementById('custom-player');
         if (!cp || cp.classList.contains('hidden')) return;
-        // Ignore shortcuts if user is typing in an input field
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-
         switch (e.key.toLowerCase()) {
             case ' ':
             case 'k':
@@ -1446,7 +1406,6 @@ function setupKeyboardControls() {
 }
 
 // DOMContentLoaded: decide search vs player
-// Main entry point when the DOM is fully loaded.
 document.addEventListener('DOMContentLoaded', function() {
     const isPlayerPage = window.location.pathname.includes('player.html');
     if (isPlayerPage) {

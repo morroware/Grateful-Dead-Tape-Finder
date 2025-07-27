@@ -1,55 +1,48 @@
 /* styles.css */
-/* Import the 'Inter' font from Google Fonts for a modern, clean look. */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
-/* CSS Custom Properties (Variables) for easy theme management. */
 :root {
-  --bg-primary: #111827;      /* Dark blue-gray for the main background */
-  --bg-card: rgba(30, 41, 59, 0.6); /* Semi-transparent card background for the glass effect */
-  --accent: #6366f1;          /* Primary accent color (indigo) */
-  --accent-hover: #4f46e5;    /* Darker accent for hover states */
+  --bg-primary: #111827;
+  --bg-card: rgba(30, 41, 59, 0.6);
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
 }
 
-/* Base HTML and Font Configuration */
 html {
-  /* Use 'Inter' as the primary font, with system fonts as fallbacks. */
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Global Body and HTML Styles */
 body, html {
-  line-height: 1.6;        /* Improve text readability */
+  line-height: 1.6;
   margin: 0;
   padding: 0;
-  min-height: 100vh;       /* Ensure body takes up at least the full viewport height */
+  min-height: 100vh;
   background-color: var(--bg-primary);
-  color: #e5e7eb;          /* Light gray text color for contrast against the dark background */
+  color: #e5e7eb;
 }
 
-/* Flexbox layout for the body to allow for a sticky footer or other vertical layouts. */
 body {
   display: flex;
   flex-direction: column;
 }
 
-/* Main content area styling */
 main {
-  flex: 1;                 /* Allows the main content to grow and fill available space */
+  flex: 1;
   width: 100%;
   margin: 0 auto;
-  box-sizing: border-box;  /* Ensures padding and borders are included in the element's total width and height */
+  box-sizing: border-box;
 }
 
-/* "Glassmorphism" Card Style */
+/* New “glass” card style */
 .glass-card {
-  background-color: var(--bg-card);      /* Semi-transparent background */
-  backdrop-filter: blur(10px);           /* The key property for the blurred glass effect */
-  border: 1px solid rgba(255,255,255,0.1); /* Subtle white border to catch light */
-  border-radius: 1.5rem;                 /* Generous rounding for a soft, modern look */
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Soft shadow to lift the card off the background */
+  background-color: var(--bg-card);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 1.5rem; /* replaces rounded-lg */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-/* Accent Button Utility Class */
+/* Accent button utility */
 .btn-accent {
   background-color: var(--accent);
   color: #fff;
@@ -57,44 +50,43 @@ main {
 }
 .btn-accent:hover {
   background-color: var(--accent-hover);
-  transform: scale(1.05); /* Slightly enlarge the button on hover for a tactile feel */
+  transform: scale(1.05);
 }
 .btn-accent:focus {
-  outline: none; /* Remove default browser outline */
-  /* Add a custom focus ring for accessibility */
+  outline: none;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5);
 }
 
-/* Search Input Styling */
+/* Search input (unchanged except radius standardized) */
 .search-input {
   background: #111827;
   color: #e5e7eb;
-  border: 1px solid #374151; /* Default border color */
-  border-radius: 1.5rem;     /* Standardized border-radius */
+  border: 1px solid #374151;
+  border-radius: 1.5rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 .search-input:focus {
   outline: none;
-  border-color: #3b82f6; /* Highlight border on focus */
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); /* Soft glow on focus */
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Filter Button Styling */
+/* Filter button (just added scale on hover) */
 .filter-button {
   background: #374151;
   color: #e5e7eb;
   font-size: 0.875rem;
   font-weight: 500;
   padding: 0.5rem 1rem;
-  border-radius: 9999px; /* Pill shape */
+  border-radius: 9999px;
   transition: background-color 0.15s ease-in-out, transform 0.15s ease-in-out;
 }
 .filter-button:hover {
   background: #4b5563;
-  transform: translateY(-1px) scale(1.02); /* Subtle lift and scale effect */
+  transform: translateY(-1px) scale(1.02);
 }
 
-/* Pagination Button Styling */
+/* Pagination (spacing made consistent; no functional change) */
 .pagination button {
   padding: 0.5rem 1rem;
   border: none;
@@ -113,35 +105,13 @@ main {
   cursor: not-allowed;
 }
 
-/* Recently Viewed Component Styling */
-#recentlyViewed {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  max-width: 300px;
-  z-index: 40; /* Ensure it floats above other content */
-}
+/* Recently viewed & skeletons as before */
+#recentlyViewed { position: fixed; bottom: 2rem; right: 2rem; max-width: 300px; z-index: 40; }
+.show-card-skeleton { background: #1f2937; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); }
+.skeleton-line { height: 1rem; background: #374151; border-radius: 0.25rem; margin-bottom: 0.5rem; }
+.animate-pulse .skeleton-line { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
-/* Loading Skeleton Card Styling */
-.show-card-skeleton {
-  background: #1f2937;
-  border-radius: 0.5rem;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-.skeleton-line {
-  height: 1rem;
-  background: #374151;
-  border-radius: 0.25rem;
-  margin-bottom: 0.5rem;
-}
-/* Pulsing animation for loading skeletons */
-.animate-pulse .skeleton-line {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Player Control Button Styling (e.g., play, next, prev) */
+/* Player buttons */
 .player-button {
   background: #374151;
   padding: 0.5rem;
@@ -156,26 +126,10 @@ main {
   transform: translateY(-1px) scale(1.02);
 }
 
-/* Waveform and Scrollbar Styling */
-#waveform {
-  background: radial-gradient(circle at 50% 50%, #111 10%, #000 100%);
-}
-
-/* Responsive Design Adjustments */
+/* Waveform & scrollbar, responsive tweaks unchanged */
+#waveform { background: radial-gradient(circle at 50% 50%, #111 10%, #000 100%); }
 @media (max-width: 640px) {
-  /* Make filter buttons full-width on small screens */
-  .filter-button {
-    width: 100%;
-    justify-content: center;
-    margin-bottom: 0.5rem;
-  }
-  /* Hide the recently viewed widget on small screens to save space */
-  #recentlyViewed {
-    display: none;
-  }
-  /* Stack pagination controls vertically on small screens */
-  .pagination {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
+  .filter-button { width: 100%; justify-content: center; margin-bottom: 0.5rem; }
+  #recentlyViewed { display: none; }
+  .pagination { flex-direction: column; gap: 0.5rem;}
 }
