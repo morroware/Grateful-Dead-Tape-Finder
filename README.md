@@ -324,7 +324,7 @@ For production:
 
 ## License
 
-Provided as-is for educational use. Concert recordings are property of Archive.org and respective artists/tapers.
+Share Ye Well License -- See License.md
 
 ## Credits
 
