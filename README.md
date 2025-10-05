@@ -2,8 +2,7 @@
 
 A static web application for searching and streaming live concert recordings from Archive.org's etree collection. Built with vanilla JavaScript, HTML5, and CSS.
 
-**Live Demo:** gratefuldeadtapefinder.com  
-**Repository:** github.com/morroware/Grateful-Dead-Tape-Finder
+**Live Demo:** https://gratefuldeadparkinglots.com
 
 ## Overview
 
