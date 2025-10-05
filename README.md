@@ -1,109 +1,335 @@
-# Live Music Archive Finder & Player
+# Live Music Archive Explorer
 
-A modern, feature-rich web interface for searching and playing the vast collection of live concert recordings available on the Internet Archive's etree collection. Originally built for Grateful Dead shows, it has been expanded to support an extensive library of bands from the jam, bluegrass, and rock scenes.
+A static web application for searching and streaming live concert recordings from Archive.org's etree collection. Built with vanilla JavaScript, HTML5, and CSS.
 
-The application is built with vanilla JavaScript (ES6+), HTML5, and Tailwind CSS, focusing on a clean, responsive, and intuitive user experience.
+**Live Demo:** gratefuldeadtapefinder.com  
+**Repository:** github.com/morroware/Grateful-Dead-Tape-Finder
 
-## ✨ Features
+## Overview
 
-- **Extensive Band Library**: Instantly search the collections of dozens of bands, including the Grateful Dead and its side projects, Billy Strings, Goose, Ween, King Gizzard, and many more.
+This application provides a search interface and audio player for Archive.org's live music library. It requires no backend infrastructure, frameworks, or build tools.
 
-- **Advanced Search & Filtering**: Narrow down results with keyword search, specific year ranges, and one-click filters for recording types like Soundboard (SBD), Audience (AUD), Matrix, and top-rated shows.
+## Features
 
-- **Modern Audio Player**: A sleek player page featuring a dynamic, colorful audio visualizer powered by the Web Audio API.
+### Search
 
-- **Full Playback Controls**: The player includes shuffle, repeat (single track or full playlist), and volume controls.
+- Full Archive.org Advanced Search API integration
+- Pre-configured queries for 50+ artists and collections
+- Quality filters: Five-star ratings, Soundboard, Audience, Matrix recordings
+- Year range filtering with band-specific defaults
+- Pagination with configurable result count
+- Three view modes: List, Grid, Compact
 
-- **Keyboard Shortcuts**: Control playback with your keyboard (e.g., Spacebar for play/pause, arrow keys to seek, 'N' for next track).
+### Audio Player
 
-- **Persistent History**: Your last selected band and a list of your 5 most recently viewed shows are saved in your browser for quick access.
+- HTML5 audio playback with full transport controls
+- Shuffle and loop modes (none, single, all)
+- Volume control and muting
+- Track seeking with buffer visualization
+- Automatic retry on network failures (3 attempts)
+- Error handling for corrupt/unsupported files
+- Web Audio API frequency visualization
 
-- **Shareable URLs**: The URL automatically updates as you search, allowing you to share and bookmark links to specific search queries or even a particular track within a show.
+### State Management
 
-## 🚀 Getting Started
+- localStorage for view preferences and recently viewed shows
+- URL-based deep linking to specific shows and tracks
+- Automatic scroll-to-active track in playlist
 
-1. **Clone the repository**
-   ```bash
-   git clone(https://github.com/morroware/Grateful-Dead-Tape-Finder/)
-   cd Grateful-Dead-Tape-Finder
-   ```
+### UI/UX
 
-2. **Open the application**
-   Simply open `index.html` in your web browser - no build process or server required!
+- Keyboard shortcuts for all primary functions
+- Responsive design for mobile and desktop
+- Loading states with skeleton screens
+- Toast notifications for user feedback
+- Collapsible sections on mobile
 
-## 🎵 How to Use
+## Technical Stack
 
-### Search for a Show
-1. Open `index.html` in your web browser
-2. Use the Band Selector dropdown to choose an artist
-3. Optionally add keywords, adjust the year range, or click filter buttons to refine your search
-4. Results will appear automatically as you type and filter
+- **Frontend:** Vanilla JavaScript (ES6 modules)
+- **Styling:** Tailwind CSS (CDN) + custom CSS
+- **Audio:** HTML5 Audio API, Web Audio API
+- **Storage:** localStorage
+- **API:** Archive.org Advanced Search
 
-### Play a Show
-1. Click any show card in the search results
-2. You'll be taken to the `player.html` page where the show's playlist will load
-3. Playback begins automatically
+## Browser Requirements
 
-### Control Playback
-Use the on-screen controls or these keyboard shortcuts:
-- **Spacebar**: Play/Pause
-- **Arrow Keys**: Seek forward/backward
-- **N**: Next track
-- **P**: Previous track
-- **S**: Shuffle toggle
-- **R**: Repeat mode toggle
+- ES6 module support
+- Web Audio API
+- HTML5 Audio
+- Fetch API
+- CSS Grid/Flexbox
+- localStorage
 
-## 📂 Project Structure
+**Tested on:** Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
+
+## Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/morroware/Grateful-Dead-Tape-Finder.git
+cd Grateful-Dead-Tape-Finder
+```
+
+2. Serve via HTTP (required for ES6 modules):
+
+**Python 3:**
+```bash
+python -m http.server 8000
+```
+
+**Node.js:**
+```bash
+npx http-server -p 8000
+```
+
+**PHP:**
+```bash
+php -S localhost:8000
+```
+
+3. Navigate to `http://localhost:8000`
+
+## Project Structure
 
 ```
-/project-root
-├── index.html      # Main search page for finding shows
-├── player.html     # Audio player page for listening to selected shows
-├── styles.css      # Custom CSS with glassmorphism theme and responsive design
-└── scripts.js      # Application logic, API interaction, and player functionality
+├── index.html              # Search page
+├── player.html             # Player page
+├── css/
+│   └── styles.css          # Custom styles and theme variables
+└── js/
+    ├── main.js             # Entry point, routing, error boundary
+    ├── search.js           # Search logic, API calls, rendering
+    ├── player.js           # Audio player implementation
+    ├── visualizer.js       # Web Audio visualization
+    ├── bandConfig.js       # Band/collection configurations
+    ├── utils.js            # Utility functions
+    ├── storage.js          # localStorage wrapper
+    └── socialMeta.js       # Dynamic meta tags for SEO
 ```
 
-### File Descriptions
+## Module Documentation
 
-- **`index.html`**: The main entry point containing the comprehensive search interface. Users can select a band, define a year range, enter keywords, and apply filters to find concert recordings.
+### main.js
 
-- **`player.html`**: A dedicated page that houses the audio player. It dynamically loads the selected show's playlist, displays detailed metadata, and provides a rich listening experience with an audio visualizer.
+Application bootstrap, page routing, global error handling.
 
-- **`styles.css`**: Contains all styling rules, utilizing a dark theme with modern fonts and a semi-transparent "glass card" aesthetic for UI elements. Fully responsive for both desktop and mobile use.
+### search.js
 
-- **`scripts.js`**: A single, comprehensive vanilla JavaScript file that drives the entire application. Handles all API calls to the Internet Archive, manages search and player state, controls audio playback, and renders dynamic UI components.
+- `searchShows(page)`: Executes Archive.org API query
+- `updateResultsDisplay()`: Renders results in active view mode
+- `changePage(delta)`: Pagination control
+- `switchView(view)`: Changes between list/grid/compact modes
 
-## 🛠️ Technologies Used
+### player.js
 
-This project is built with modern web technologies and has minimal dependencies:
+Core Player class:
 
-- **Tailwind CSS (v3)**: Used for all styling, included via CDN
-- **Vanilla JavaScript (ES6+)**: All application logic written in modern, dependency-free JavaScript
-- **Web Audio API**: Powers the real-time audio visualizer
-- **Fetch API**: Handles all asynchronous requests to the Internet Archive API
-- **HTML5 & CSS3**: Utilizes modern markup and styling features like CSS variables and `backdrop-filter` for the glass effect
+- `initialize(identifier, startTrack)`: Loads show metadata and playlist
+- `loadTrack(index)`: Loads audio source
+- `playPause()`: Toggle playback
+- `nextTrack()/prevTrack()`: Navigation with loop/shuffle support
+- `selectTrack(index)`: Direct track selection
+- Error recovery with consecutive error tracking
 
-## 🎯 Browser Compatibility
+### visualizer.js
 
-- Modern browsers with ES6+ support
-- Web Audio API support required for visualizer functionality
-- Responsive design works on desktop, tablet, and mobile devices
+Visualizer class for Web Audio API integration:
 
-## 🤝 Contributing
+- `initialize(audioElement)`: Creates AudioContext and AnalyserNode
+- `draw()`: RequestAnimationFrame loop for canvas rendering
+- FFT size: 256, renders frequency bars with gradient effects
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+### bandConfig.js
 
-## 📄 License
+Configuration object mapping band IDs to Archive.org queries:
 
-Public Domain. If you like it, use it. Credit would be nice, but not required.
+```javascript
+{
+    query: string,           // Archive.org search query
+    title: string,           // Display name
+    yearRange?: [number, number],  // Optional year filter
+    customSearch?: boolean   // Enable freeform search
+}
+```
 
-## 🙏 Acknowledgments
+### utils.js
 
-- Thanks to the Internet Archive for maintaining the incredible etree collection
-- Built for the live music community and tape traders everywhere
+- `formatTime(seconds)`: Converts seconds to MM:SS or H:MM:SS
+- `shuffleArray(array)`: Fisher-Yates shuffle
+- `showToast(message, type, duration)`: Toast notifications
+- `showPlayerError(message)`: Player error display
 
----
+### storage.js
 
-*Enjoy exploring decades of live music history!* 🎸
+StorageManager singleton:
 
+- `getRecentlyViewed()`: Returns last 5 shows
+- `updateRecentlyViewed(show)`: Adds show to history
+- `getSelectedBand()/setSelectedBand(band)`: Persists dropdown selection
+
+### socialMeta.js
+
+SocialMetaUpdater static class:
+
+- `updateShowMeta(show)`: Updates Open Graph and Twitter Card tags
+- `createShareButton(identifier, title)`: Generates share UI
+- `getShareLinks(url, title)`: Returns platform-specific share URLs
+
+## Configuration
+
+### Adding Bands
+
+Edit `js/bandConfig.js`:
+
+```javascript
+export const bandConfig = {
+    'NewBandId': {
+        query: 'collection:(CollectionName) AND mediatype:(etree)',
+        title: 'Band Display Name',
+        yearRange: [1990, 2024]  // optional
+    }
+};
+```
+
+Update `getAllBands()` to add to dropdown:
+
+```javascript
+{ group: 'Genre Name', options: [
+    { id: 'NewBandId', title: 'Band Display Name' }
+]}
+```
+
+### Theme Customization
+
+CSS variables in `css/styles.css`:
+
+```css
+:root {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --accent-primary: #0ea5e9;
+  --accent-secondary: #06b6d4;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+}
+```
+
+### Visualizer Settings
+
+Modify `js/visualizer.js` draw() method:
+
+```javascript
+this.analyser.fftSize = 256;  // 64, 128, 256, 512, 1024, 2048
+const barHeight = eased * height * 1.7;  // Height multiplier
+const hue = (i * 2 + time * 80) % 360;   // Color shift speed
+```
+
+## API Reference
+
+### Archive.org Advanced Search
+
+**Endpoint:**
+```
+https://archive.org/advancedsearch.php
+```
+
+**Parameters:**
+
+- `q`: Query string (URL encoded)
+- `fl[]`: Field list (identifier, title, year, venue, etc.)
+- `sort[]`: Sort order (downloads desc)
+- `output`: json
+- `rows`: Results per page
+- `page`: Page number
+
+**Audio streaming:**
+```
+https://archive.org/download/{identifier}/{filename}
+```
+
+**Query Syntax:**
+
+- Exact phrase: `"Madison Square Garden"`
+- Boolean: `New York AND 1977`, `jazz OR blues`, `Dead NOT Company`
+- Fields: `venue:"Red Rocks"`, `year:1989`
+- Range: `year:[1970 TO 1979]`
+- Wildcards: `phil*`, `grate?ul`
+
+## Keyboard Shortcuts
+
+### Search Page:
+
+- `/`: Focus search input
+- `R`: Random show
+- `1, 2, 3`: Switch view modes
+
+### Player Page:
+
+- `Space` or `K`: Play/Pause
+- `←/→`: Seek ±5 seconds
+- `J/L`: Seek ±10 seconds
+- `M`: Mute toggle
+- `N`: Next track
+- `P`: Previous track
+
+## Error Handling
+
+- **Network errors:** Automatic retry with exponential backoff (1s, 2s, 3s)
+- **Audio errors:** Specific handling for MEDIA_ERR_NETWORK, MEDIA_ERR_DECODE, etc.
+- **Consecutive failures:** After 3 failed tracks, show persistent error
+- **Global handlers:** Catch unhandled exceptions and promise rejections
+
+## Performance
+
+- Debounced API calls during search input
+- Paginated results (10 per page default)
+- RequestAnimationFrame for 60fps visualization
+- Canvas rendering optimized for low CPU usage
+- Event listener cleanup on page unload
+- No external dependencies beyond Tailwind CDN
+
+## Known Limitations
+
+- Archive.org API rate limiting during heavy usage
+- Safari requires user interaction before AudioContext creation
+- Mobile browsers may block autoplay
+- Large playlists (100+ tracks) have slower metadata parsing
+- No offline support (requires active internet connection)
+
+## Deployment
+
+Static hosting compatible with:
+
+- GitHub Pages
+- Netlify
+- Vercel
+- AWS S3 + CloudFront
+- Firebase Hosting
+- Any static file server
+
+No build process or environment variables required.
+
+## Development
+
+No build tools needed. Edit files and refresh browser.
+
+For production:
+
+- Minify JavaScript and CSS
+- Optimize images
+- Add cache headers
+- Consider CDN for static assets
+- Enable gzip/brotli compression
+
+## License
+
+Provided as-is for educational use. Concert recordings are property of Archive.org and respective artists/tapers.
+
+## Credits
+
+- Archive.org for etree collection and API
+- Tailwind CSS for utility framework
+- Live music community for recording preservation
 
