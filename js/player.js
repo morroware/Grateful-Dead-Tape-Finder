@@ -97,16 +97,28 @@ export class Player {
                 throw new Error('No files found in show data');
             }
 
-            const audioFiles = data.files.filter(f =>
+            let audioFiles = data.files.filter(f =>
                 f.format && f.format.toLowerCase().includes('mp3') && f.name
             );
-            
+
             if (!audioFiles.length) {
                 throw new Error('No playable MP3 files found in this recording');
             }
 
-            this.playlist = audioFiles.map(f => ({
-                title: f.title || f.name.replace('.mp3', ''),
+            // Filter out low-quality 64kb files
+            audioFiles = audioFiles.filter(f => !f.name.includes('64kb'));
+
+            // Handle duplicate files - prefer VBR versions
+            const vbrFiles = audioFiles.filter(f => f.name.toLowerCase().includes('_vbr.mp3'));
+            const regularFiles = audioFiles.filter(f => !f.name.toLowerCase().includes('_vbr.mp3'));
+
+            // If VBR files exist, use only those (they're duplicates of regular files)
+            // Otherwise use regular files
+            const filesToUse = vbrFiles.length > 0 ? vbrFiles : regularFiles;
+
+            // Build playlist from the selected files
+            this.playlist = filesToUse.map(f => ({
+                title: f.title || f.name.replace('.mp3', '').replace('_vbr', ''),
                 url: `https://archive.org/download/${identifier}/${encodeURIComponent(f.name)}`
             }));
             this.originalPlaylist = [...this.playlist];

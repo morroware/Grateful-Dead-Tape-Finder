@@ -378,8 +378,9 @@ export function initSearchPage() {
             yearFrom.value = config.yearRange[0];
             yearTo.value = config.yearRange[1];
         } else {
-            yearFrom.value = '1965';
-            yearTo.value = '2025';
+            // Leave year range wide open for bands without specific range
+            yearFrom.value = '';
+            yearTo.value = '';
         }
     }
 
@@ -420,13 +421,19 @@ export function initSearchPage() {
         bandSelector.addEventListener('change', function() {
             storage.setSelectedBand(this.value);
             currentPage = 1;
-            
+
             const config = getBandConfig(this.value);
-            if (yearFrom && yearTo && config && config.yearRange) {
-                yearFrom.value = config.yearRange[0];
-                yearTo.value = config.yearRange[1];
+            if (yearFrom && yearTo) {
+                if (config && config.yearRange) {
+                    yearFrom.value = config.yearRange[0];
+                    yearTo.value = config.yearRange[1];
+                } else {
+                    // Leave year range wide open for bands without specific range
+                    yearFrom.value = '';
+                    yearTo.value = '';
+                }
             }
-            
+
             searchShows(1);
         });
     }
