@@ -59,7 +59,7 @@ class StorageManager {
 
     // Get selected band
     getSelectedBand() {
-        return localStorage.getItem(this.prefix + 'selectedBand') || 'AllArchive';
+        return localStorage.getItem(this.prefix + 'selectedBand') || 'GratefulDead';
     }
 
     // Save selected band
