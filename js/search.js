@@ -217,87 +217,35 @@ function createEnhancedShowCard(show) {
     const isSbd = src.includes('soundboard') || src.includes('sbd');
     const isAud = src.includes('audience') || src.includes('aud');
     const isMx = src.includes('matrix');
-    
+
     let tags = '';
-    if (isSbd) tags += `<span class="tag bg-emerald-900 text-emerald-200 border border-emerald-700">
-        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-        </svg>
-        SBD
-    </span>`;
-    if (isAud) tags += `<span class="tag bg-amber-900 text-amber-200 border border-amber-700">
-        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-        </svg>
-        AUD
-    </span>`;
-    if (isMx) tags += `<span class="tag bg-cyan-900 text-cyan-200 border border-cyan-700">
-        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-        MATRIX
-    </span>`;
-    
-    if (show.avg_rating && show.avg_rating > 0) {
-        const stars = '★'.repeat(Math.round(show.avg_rating));
-        tags += `<span class="tag bg-blue-900 text-blue-200 border border-blue-700">
-            ${stars} ${show.avg_rating.toFixed(1)}
-        </span>`;
+    if (isSbd) tags += `<span class="tag tag-sbd">SBD</span>`;
+    if (isAud) tags += `<span class="tag tag-aud">AUD</span>`;
+    if (isMx) tags += `<span class="tag tag-matrix">MTX</span>`;
+
+    if (show.avg_rating && show.avg_rating >= 4) {
+        tags += `<span class="tag" style="background:#1e3a5f;color:#93c5fd;">★ ${show.avg_rating.toFixed(1)}</span>`;
     }
-    
-    const title = show.creator && show.creator !== 'Grateful Dead' ? 
-        `${show.creator}` : 
-        'Grateful Dead';
-    
+
+    const artist = show.creator || 'Unknown Artist';
     const showTitle = show.title || show.date || 'Unknown Show';
-    
+
     return `
-        <div class="show-card card-hover p-4 md:p-6 rounded-xl md:rounded-2xl cursor-pointer group"
+        <div class="show-card rounded-lg p-4 cursor-pointer transition-all"
              onclick="openPlayerPage('${show.identifier}')">
-            <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4 mb-3 md:mb-4">
+            <div class="flex items-start justify-between gap-4">
                 <div class="flex-1 min-w-0">
-                    <div class="text-xs md:text-sm font-semibold text-sky-400 mb-1">${title}</div>
-                    <h3 class="text-base md:text-xl font-bold text-white mb-2 group-hover:text-sky-300 transition-colors leading-snug">
-                        ${showTitle}
-                    </h3>
-                    <div class="flex flex-wrap gap-1.5 md:gap-2">${tags}</div>
+                    <div class="text-xs text-zinc-500 mb-1">${artist}</div>
+                    <h3 class="font-medium text-white mb-2 leading-snug">${showTitle}</h3>
+                    <div class="flex flex-wrap gap-1.5 mb-2">${tags}</div>
+                    <div class="flex items-center gap-4 text-xs text-zinc-500">
+                        ${show.venue ? `<span>${show.venue}</span>` : ''}
+                        ${show.date || show.year ? `<span>${show.date || show.year}</span>` : ''}
+                    </div>
                 </div>
-                <div class="text-left md:text-right flex-shrink-0">
-                    <div class="text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-sky-400 to-cyan-400">
-                        ${show.downloads || 0}
-                    </div>
-                    <div class="text-xs text-gray-500 font-medium">plays</div>
-                </div>
-            </div>
-            
-            <div class="flex flex-wrap items-center gap-3 md:gap-4 text-xs md:text-sm text-gray-400">
-                ${show.venue ? `
-                    <div class="flex items-center gap-1.5">
-                        <svg class="w-3 h-3 md:w-4 md:h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <span>${show.venue}</span>
-                    </div>
-                ` : ''}
-                ${show.date || show.year ? `
-                    <div class="flex items-center gap-1.5">
-                        <svg class="w-3 h-3 md:w-4 md:h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span>${show.date || show.year}</span>
-                    </div>
-                ` : ''}
-            </div>
-            
-            <div class="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-gray-700 flex items-center justify-between">
-                <span class="text-xs md:text-sm text-gray-500">${show.coverage || ''}</span>
-                <div class="flex items-center gap-2 text-sky-400 font-medium text-xs md:text-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span>Play now</span>
-                    <svg class="w-3 h-3 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                <div class="text-right flex-shrink-0">
+                    <div class="text-lg font-semibold text-zinc-300">${(show.downloads || 0).toLocaleString()}</div>
+                    <div class="text-xs text-zinc-600">plays</div>
                 </div>
             </div>
         </div>
@@ -305,44 +253,31 @@ function createEnhancedShowCard(show) {
 }
 
 function createGridCard(show) {
-    const title = show.creator && show.creator !== 'Grateful Dead' ? show.creator : 'Grateful Dead';
+    const artist = show.creator || 'Unknown Artist';
     const showTitle = show.title || show.date || 'Unknown Show';
-    
+
     const src = show.source ? show.source.toLowerCase() : '';
-    const sourceIcon = src.includes('sbd') ? 
-        '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>' :
-        src.includes('aud') ?
-        '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>' : '';
-    
+    const sourceType = src.includes('sbd') ? 'SBD' : src.includes('aud') ? 'AUD' : '';
+
     return `
-        <div class="show-card card-hover p-4 md:p-5 rounded-xl cursor-pointer group h-full flex flex-col"
+        <div class="show-card rounded-lg p-4 cursor-pointer h-full flex flex-col"
              onclick="openPlayerPage('${show.identifier}')">
             <div class="flex-1">
-                <div class="text-xs font-semibold text-sky-400 mb-2">${title}</div>
-                <h4 class="font-bold text-sm md:text-base text-white mb-3 group-hover:text-sky-300 transition-colors leading-snug" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                <div class="text-xs text-zinc-500 mb-1">${artist}</div>
+                <h4 class="font-medium text-sm text-white mb-2 leading-snug" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                     ${showTitle}
                 </h4>
-                <div class="space-y-1.5 text-xs text-gray-400">
-                    ${show.date || show.year ? `<div class="flex items-center gap-1.5">
-                        <svg class="w-3 h-3 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        ${show.date || show.year}
-                    </div>` : ''}
-                    ${show.venue ? `<div class="flex items-center gap-1.5">
-                        <svg class="w-3 h-3 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        </svg>
-                        <span class="truncate">${show.venue}</span>
-                    </div>` : ''}
+                <div class="text-xs text-zinc-500 space-y-1">
+                    ${show.date || show.year ? `<div>${show.date || show.year}</div>` : ''}
+                    ${show.venue ? `<div class="truncate">${show.venue}</div>` : ''}
                 </div>
             </div>
-            <div class="mt-4 pt-3 border-t border-gray-700 flex items-center justify-between text-xs">
-                <div class="flex items-center gap-1.5 text-gray-400">
-                    ${sourceIcon}
-                    <span>${show.downloads || 0} plays</span>
+            <div class="mt-3 pt-3 border-t border-zinc-800 flex items-center justify-between text-xs">
+                <span class="text-zinc-500">${(show.downloads || 0).toLocaleString()} plays</span>
+                <div class="flex items-center gap-2">
+                    ${sourceType ? `<span class="tag tag-${sourceType.toLowerCase()}">${sourceType}</span>` : ''}
+                    ${show.avg_rating >= 4 ? `<span class="text-blue-400">★${show.avg_rating.toFixed(1)}</span>` : ''}
                 </div>
-                ${show.avg_rating ? `<span class="text-yellow-400 font-medium">★ ${show.avg_rating.toFixed(1)}</span>` : ''}
             </div>
         </div>
     `;
@@ -351,21 +286,18 @@ function createGridCard(show) {
 function createCompactCard(show) {
     const src = show.source ? show.source.toLowerCase() : '';
     const sourceType = src.includes('sbd') ? 'SBD' : src.includes('aud') ? 'AUD' : src.includes('matrix') ? 'MTX' : '';
-    
+
     return `
-        <div class="show-card px-4 py-3 rounded-xl flex items-center justify-between gap-4 cursor-pointer hover:bg-opacity-100 group"
+        <div class="show-card px-4 py-2.5 rounded-lg flex items-center gap-4 cursor-pointer"
              onclick="openPlayerPage('${show.identifier}')">
-            <div class="flex items-center gap-4 flex-1 min-w-0">
-                <div class="flex-shrink-0 w-16 text-sm text-gray-500 font-medium">${show.date || show.year || '—'}</div>
-                <div class="flex-1 min-w-0">
-                    <div class="font-semibold text-white truncate group-hover:text-sky-300 transition-colors">${show.title || 'Unknown Show'}</div>
-                    ${show.venue ? `<div class="text-xs text-gray-500 truncate">${show.venue}</div>` : ''}
-                </div>
+            <div class="w-20 text-xs text-zinc-500 flex-shrink-0">${show.date || show.year || '—'}</div>
+            <div class="flex-1 min-w-0">
+                <div class="text-sm text-white truncate">${show.title || 'Unknown Show'}</div>
             </div>
-            <div class="flex items-center gap-3 flex-shrink-0">
-                ${sourceType ? `<span class="px-2 py-1 bg-gray-800 text-gray-400 rounded text-xs font-medium">${sourceType}</span>` : ''}
-                ${show.avg_rating ? `<span class="text-yellow-400 text-sm font-medium">★${show.avg_rating.toFixed(1)}</span>` : ''}
-                <span class="text-gray-500 text-sm">${show.downloads || 0}</span>
+            <div class="flex items-center gap-3 flex-shrink-0 text-xs">
+                ${sourceType ? `<span class="tag tag-${sourceType.toLowerCase()}">${sourceType}</span>` : ''}
+                ${show.avg_rating >= 4 ? `<span class="text-blue-400">★${show.avg_rating.toFixed(1)}</span>` : ''}
+                <span class="text-zinc-600 w-16 text-right">${(show.downloads || 0).toLocaleString()}</span>
             </div>
         </div>
     `;
@@ -449,6 +381,15 @@ export function initSearchPage() {
             yearFrom.value = '1965';
             yearTo.value = '2025';
         }
+    }
+
+    // Prevent form submission
+    const searchForm = document.getElementById('searchForm');
+    if (searchForm) {
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            searchShows(1);
+        });
     }
 
     if (searchButton) {

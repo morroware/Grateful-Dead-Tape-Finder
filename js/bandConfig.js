@@ -49,7 +49,6 @@ export const bandConfig = {
     },
     
     // === JAM BANDS ===
-
     'DiscoBiscuits': {
         query: 'collection:(DiscoBiscuits) AND mediatype:(etree)',
         title: 'Disco Biscuits'
@@ -251,7 +250,6 @@ export function getAllBands() {
             { id: 'JRAD', title: "Joe Russo's Almost Dead" }
         ]},
         { group: 'Jam Bands', options: [
-            { id: 'Phish', title: 'Phish' },
             { id: 'WidespreadPanic', title: 'Widespread Panic' },
             { id: 'StringCheese', title: 'String Cheese Incident' },
             { id: 'UmphreysMcGee', title: "Umphrey's McGee" },
@@ -291,7 +289,6 @@ export function getAllBands() {
         ]},
         { group: 'Electronic', options: [
             { id: 'Tipper', title: 'Tipper' },
-            { id: 'STS9', title: 'STS9' },
             { id: 'Papadosio', title: 'Papadosio' },
             { id: 'Shpongle', title: 'Shpongle' },
             { id: 'EOTO', title: 'EOTO' }
