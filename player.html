@@ -96,9 +96,12 @@
         </svg>
         <span class="text-sm font-medium text-white">Live Music Archive</span>
       </div>
-      <a id="archive-link" href="#" target="_blank" rel="noopener" class="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
-        View on Archive.org
-      </a>
+      <div class="flex items-center gap-4">
+        <a id="archive-link" href="#" target="_blank" rel="noopener" class="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+          View on Archive.org
+        </a>
+        <div id="auth-area"></div>
+      </div>
     </div>
   </header>
 
@@ -107,6 +110,10 @@
     <!-- Show Title -->
     <div class="text-center">
       <h1 id="show-title" class="text-xl font-semibold text-white">Loading...</h1>
+      <div class="flex items-center justify-center gap-3 mt-2">
+        <div id="favorite-btn-container"></div>
+        <div id="collection-btn-container"></div>
+      </div>
     </div>
 
     <!-- Player Card -->

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile - Live Music Archive</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    * { box-sizing: border-box; }
+    body { background: #0a0a0b; color: #e4e4e7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .card { background: #18181b; border: 1px solid #27272a; }
+    .tab-btn.active { color: #3b82f6; border-bottom-color: #3b82f6; }
+    input[type="text"], input[type="email"], input[type="password"] {
+      background: #0a0a0b; border: 1px solid #27272a; color: #e4e4e7;
+    }
+    input:focus { outline: none; border-color: #3b82f6; }
+    .show-card { background: #18181b; border: 1px solid #27272a; }
+    .show-card:hover { border-color: #3b82f6; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- Header -->
+  <header class="border-b border-zinc-800 bg-zinc-900/80 backdrop-blur-sm sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-3">
+        <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+        </svg>
+        <h1 class="text-lg font-semibold text-white">Live Music Archive</h1>
+      </a>
+      <div id="auth-area"></div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-8">
+
+    <!-- Profile Header -->
+    <div id="profile-header" class="mb-8">
+      <h2 class="text-2xl font-bold text-white mb-1" id="profile-name">My Profile</h2>
+      <p class="text-sm text-zinc-400" id="profile-email"></p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex border-b border-zinc-800 mb-6">
+      <button class="tab-btn active px-4 py-3 text-sm font-medium border-b-2 border-transparent transition-colors" data-tab="favorites">
+        Favorites
+      </button>
+      <button class="tab-btn px-4 py-3 text-sm font-medium text-zinc-400 border-b-2 border-transparent hover:text-zinc-200 transition-colors" data-tab="collections">
+        Collections
+      </button>
+      <button class="tab-btn px-4 py-3 text-sm font-medium text-zinc-400 border-b-2 border-transparent hover:text-zinc-200 transition-colors" data-tab="settings">
+        Settings
+      </button>
+    </div>
+
+    <!-- Favorites Tab -->
+    <div id="tab-favorites" class="tab-content space-y-3"></div>
+
+    <!-- Collections Tab -->
+    <div id="tab-collections" class="tab-content hidden">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-medium text-white">My Collections</h3>
+        <button id="new-collection-btn-profile" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-sm text-white rounded-lg transition-colors">
+          + New Collection
+        </button>
+      </div>
+      <div id="new-collection-form-profile" class="card rounded-lg p-4 mb-4 hidden">
+        <div class="flex gap-3">
+          <input type="text" id="new-coll-name" placeholder="Collection name" class="flex-1 px-3 py-2 rounded-lg text-sm">
+          <input type="text" id="new-coll-desc" placeholder="Description (optional)" class="flex-1 px-3 py-2 rounded-lg text-sm">
+          <button id="create-coll-btn-profile" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-sm text-white rounded-lg transition-colors">Create</button>
+        </div>
+      </div>
+      <div id="collections-list" class="space-y-3"></div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="tab-settings" class="tab-content hidden">
+      <div class="card rounded-xl p-6 max-w-md">
+        <h3 class="text-lg font-medium text-white mb-4">Account Settings</h3>
+        <form id="settings-form" class="space-y-4">
+          <div>
+            <label class="block text-sm text-zinc-400 mb-1">Display Name</label>
+            <input type="text" id="setting-display-name" class="w-full px-3 py-2 rounded-lg text-sm">
+          </div>
+          <div>
+            <label class="block text-sm text-zinc-400 mb-1">Email</label>
+            <input type="email" id="setting-email" class="w-full px-3 py-2 rounded-lg text-sm">
+          </div>
+          <div class="border-t border-zinc-800 pt-4 mt-4">
+            <h4 class="text-sm font-medium text-white mb-3">Change Password</h4>
+            <div class="space-y-3">
+              <input type="password" id="setting-current-pw" placeholder="Current password" class="w-full px-3 py-2 rounded-lg text-sm">
+              <input type="password" id="setting-new-pw" placeholder="New password (8+ chars)" class="w-full px-3 py-2 rounded-lg text-sm">
+            </div>
+          </div>
+          <div id="settings-message" class="text-sm"></div>
+          <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm transition-colors">
+            Save Changes
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+  <script type="module">
+    import { initAuth, getCurrentUser } from './js/auth.js';
+    import { renderFavoritesList } from './js/favorites.js';
+    import { getCollections, createCollection, deleteCollection } from './js/api.js';
+    import { updateProfile } from './js/api.js';
+    import { showToast } from './js/utils.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await initAuth();
+
+      if (!user) {
+        window.location.href = 'login.html?return=profile.html';
+        return;
+      }
+
+      // Profile header
+      document.getElementById('profile-name').textContent = user.display_name || user.username;
+      document.getElementById('profile-email').textContent = user.email;
+
+      // Load favorites
+      renderFavoritesList(document.getElementById('tab-favorites'));
+
+      // Tab switching
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+          btn.classList.add('active');
+          document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+
+          if (btn.dataset.tab === 'collections') loadCollections();
+        });
+      });
+
+      // Handle hash navigation
+      if (window.location.hash === '#collections') {
+        document.querySelector('[data-tab="collections"]').click();
+      } else if (window.location.hash === '#settings') {
+        document.querySelector('[data-tab="settings"]').click();
+      }
+
+      // Settings form
+      document.getElementById('setting-display-name').value = user.display_name || '';
+      document.getElementById('setting-email').value = user.email || '';
+
+      document.getElementById('settings-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const msgEl = document.getElementById('settings-message');
+        try {
+          const data = {
+            display_name: document.getElementById('setting-display-name').value.trim(),
+            email: document.getElementById('setting-email').value.trim()
+          };
+          const curPw = document.getElementById('setting-current-pw').value;
+          const newPw = document.getElementById('setting-new-pw').value;
+          if (curPw && newPw) {
+            data.current_password = curPw;
+            data.new_password = newPw;
+          }
+          await updateProfile(data);
+          msgEl.textContent = 'Settings saved!';
+          msgEl.className = 'text-sm text-green-400';
+          showToast('Settings saved', 'success');
+        } catch (error) {
+          msgEl.textContent = error.message || 'Failed to save';
+          msgEl.className = 'text-sm text-red-400';
+        }
+      });
+
+      // New collection form
+      const newCollBtn = document.getElementById('new-collection-btn-profile');
+      const newCollForm = document.getElementById('new-collection-form-profile');
+      newCollBtn.addEventListener('click', () => newCollForm.classList.toggle('hidden'));
+
+      document.getElementById('create-coll-btn-profile').addEventListener('click', async () => {
+        const name = document.getElementById('new-coll-name').value.trim();
+        const desc = document.getElementById('new-coll-desc').value.trim();
+        if (!name) return;
+        try {
+          await createCollection(name, desc, true);
+          showToast('Collection created', 'success');
+          newCollForm.classList.add('hidden');
+          document.getElementById('new-coll-name').value = '';
+          document.getElementById('new-coll-desc').value = '';
+          loadCollections();
+        } catch (error) {
+          showToast(error.message || 'Failed to create', 'error');
+        }
+      });
+    });
+
+    async function loadCollections() {
+      const container = document.getElementById('collections-list');
+      container.innerHTML = '<div class="text-center py-8 text-zinc-500">Loading...</div>';
+
+      try {
+        const collections = await getCollections();
+        if (!collections || collections.length === 0) {
+          container.innerHTML = `
+            <div class="text-center py-12">
+              <svg class="w-12 h-12 mx-auto text-zinc-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+              </svg>
+              <p class="text-zinc-400">No collections yet</p>
+              <p class="text-sm text-zinc-500 mt-1">Create a collection to organize your favorite shows</p>
+            </div>`;
+          return;
+        }
+
+        container.innerHTML = collections.map(c => `
+          <div class="card rounded-lg p-4 flex items-center justify-between">
+            <a href="collection.html?slug=${c.slug}" class="flex-1">
+              <div class="font-medium text-white">${escapeHtml(c.name)}</div>
+              <div class="text-xs text-zinc-500 mt-1">${c.item_count || 0} shows ${c.is_public ? '' : '(private)'}</div>
+              ${c.description ? '<div class="text-xs text-zinc-400 mt-1">' + escapeHtml(c.description) + '</div>' : ''}
+            </a>
+            <div class="flex items-center gap-2 flex-shrink-0 ml-4">
+              <button class="copy-slug text-zinc-500 hover:text-blue-400 transition-colors" data-slug="${c.slug}" title="Copy share link">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+              </button>
+              <button class="delete-coll text-zinc-500 hover:text-red-400 transition-colors" data-slug="${c.slug}" title="Delete">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        `).join('');
+
+        container.querySelectorAll('.copy-slug').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const url = window.location.origin + '/collection.html?slug=' + btn.dataset.slug;
+            navigator.clipboard.writeText(url).then(() => showToast('Link copied!', 'success'));
+          });
+        });
+
+        container.querySelectorAll('.delete-coll').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            if (!confirm('Delete this collection?')) return;
+            try {
+              await deleteCollection(btn.dataset.slug);
+              showToast('Collection deleted', 'info');
+              loadCollections();
+            } catch (e) {
+              showToast('Failed to delete', 'error');
+            }
+          });
+        });
+      } catch (error) {
+        container.innerHTML = '<div class="text-center py-8 text-red-400">Failed to load collections</div>';
+      }
+    }
+
+    function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+  </script>
+</body>
+</html>
