@@ -4,7 +4,7 @@
 
 import { initSearchPage } from './search.js';
 import { Player } from './player.js';
-import { showToast } from './utils.js';
+import { showToast, escapeHtml } from './utils.js';
 import { initAuth } from './auth.js';
 import { initFavoriteButton, initCollectionDropdown } from './favorites.js';
 
@@ -107,7 +107,7 @@ function showPlayerInitError(message) {
                           d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
                 <h3 class="text-xl font-bold text-red-400 mb-2">Error Loading Player</h3>
-                <p class="text-gray-300 mb-4">${message}</p>
+                <p class="text-gray-300 mb-4">${escapeHtml(message)}</p>
                 <div class="flex gap-4 justify-center">
                     <button onclick="location.reload()"
                             class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors">

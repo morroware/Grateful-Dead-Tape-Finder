@@ -1,6 +1,6 @@
 // player.js - Fixed playlist functionality
 
-import { formatTime, shuffleArray, showPlayerError, showToast } from './utils.js';
+import { formatTime, shuffleArray, showPlayerError, showToast, escapeHtml } from './utils.js';
 import { storage } from './storage.js';
 import { Visualizer } from './visualizer.js';
 import { getShowMetadata } from './api.js';
@@ -390,15 +390,16 @@ export class Player {
 
     prevTrack() {
         if (this.isLoadingTrack) return;
-        
-        this.audio.pause();
-        this.audio.src = '';
-        this.audio.load();
 
+        // If more than 3 seconds into the track, restart it instead of going back
         if (this.audio.currentTime > 3) {
             this.audio.currentTime = 0;
             return;
         }
+
+        this.audio.pause();
+        this.audio.src = '';
+        this.audio.load();
 
         if (this.isShuffled) {
             this.currentIndex = Math.floor(Math.random() * this.playlist.length);
@@ -715,14 +716,14 @@ export class Player {
         if (si && data.metadata) {
             const m = data.metadata;
             const content = `
-                <p class="text-sm md:text-base text-gray-300"><strong>Date:</strong> ${m.date || 'N/A'}</p>
-                <p class="text-sm md:text-base text-gray-300"><strong>Venue:</strong> ${m.venue || 'N/A'}</p>
-                <p class="text-sm md:text-base text-gray-300"><strong>Location:</strong> ${m.coverage || 'N/A'}</p>
-                <p class="text-sm md:text-base text-gray-300"><strong>Source:</strong> ${m.source || 'N/A'}</p>
-                ${m.lineage ? `<p class="text-sm md:text-base text-gray-300"><strong>Lineage:</strong> ${m.lineage}</p>` : ''}
-                ${m.taper ? `<p class="text-sm md:text-base text-gray-300"><strong>Taper:</strong> ${m.taper}</p>` : ''}
+                <p class="text-sm md:text-base text-gray-300"><strong>Date:</strong> ${escapeHtml(m.date || 'N/A')}</p>
+                <p class="text-sm md:text-base text-gray-300"><strong>Venue:</strong> ${escapeHtml(m.venue || 'N/A')}</p>
+                <p class="text-sm md:text-base text-gray-300"><strong>Location:</strong> ${escapeHtml(m.coverage || 'N/A')}</p>
+                <p class="text-sm md:text-base text-gray-300"><strong>Source:</strong> ${escapeHtml(m.source || 'N/A')}</p>
+                ${m.lineage ? `<p class="text-sm md:text-base text-gray-300"><strong>Lineage:</strong> ${escapeHtml(m.lineage)}</p>` : ''}
+                ${m.taper ? `<p class="text-sm md:text-base text-gray-300"><strong>Taper:</strong> ${escapeHtml(m.taper)}</p>` : ''}
             `;
-            
+
             // Handle both details and regular div
             if (si.tagName === 'DETAILS') {
                 let contentDiv = si.querySelector('.show-info-content');
@@ -739,18 +740,18 @@ export class Player {
                 `;
             }
         }
-        
+
         const ai = document.getElementById('additional-info');
         if (ai && data.metadata) {
             const m = data.metadata;
             const hasInfo = m.description || m.notes || m.setlist;
             const content = `
-                ${m.description ? `<p class="text-sm md:text-base text-gray-300 mb-2">${m.description}</p>` : ''}
-                ${m.notes ? `<p class="text-sm md:text-base text-gray-300 mb-2">${m.notes}</p>` : ''}
-                ${m.setlist ? `<div class="text-sm md:text-base text-gray-300 whitespace-pre-line">${m.setlist}</div>` : ''}
+                ${m.description ? `<p class="text-sm md:text-base text-gray-300 mb-2">${escapeHtml(m.description)}</p>` : ''}
+                ${m.notes ? `<p class="text-sm md:text-base text-gray-300 mb-2">${escapeHtml(m.notes)}</p>` : ''}
+                ${m.setlist ? `<div class="text-sm md:text-base text-gray-300 whitespace-pre-line">${escapeHtml(m.setlist)}</div>` : ''}
                 ${!hasInfo ? '<p class="text-sm md:text-base text-gray-500">No additional information available</p>' : ''}
             `;
-            
+
             // Handle both details and regular div
             if (ai.tagName === 'DETAILS') {
                 let contentDiv = ai.querySelector('.additional-info-content');
@@ -827,7 +828,7 @@ export class Player {
                               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                     <h3 class="text-xl font-bold text-red-400 mb-2">Error Loading Player</h3>
-                    <p class="text-gray-300 mb-4">${msg}</p>
+                    <p class="text-gray-300 mb-4">${escapeHtml(msg)}</p>
                     <div class="flex gap-4 justify-center">
                         <button onclick="location.reload()" 
                                 class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors">
