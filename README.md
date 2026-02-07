@@ -8,23 +8,26 @@ A web application for searching and streaming live concert recordings from Archi
 
 ### Search & Playback
 - Full Archive.org Advanced Search API integration
-- Pre-configured queries for 50+ artists and collections
+- Pre-configured queries for 50+ artists across jam, bluegrass, funk, rock, and electronic genres
 - Quality filters: Soundboard, Audience, Matrix, Top Rated
 - Year range filtering with band-specific defaults
 - Three view modes: List, Grid, Compact
 - HTML5 audio player with full transport controls, shuffle, loop, and keyboard shortcuts
 - Web Audio API frequency visualization
+- Dynamic social meta tags (Open Graph, Twitter Cards, JSON-LD) for link previews
 
 ### Backend & Caching
 - Node.js/Express backend proxies and caches Archive.org API responses in MySQL
 - Search results cached for 6 hours, show metadata cached for 24 hours
-- Automatic cache expiration and cleanup
+- Automatic hourly cache expiration and cleanup
 - Graceful degradation: if the backend is offline, the frontend falls back to direct Archive.org calls
+- Rate limiting on authentication endpoints (20 attempts per 15 minutes)
 
 ### User Accounts (Optional)
-- Registration and login with bcrypt-hashed passwords
+- Registration and login with bcrypt-hashed passwords (12 rounds)
 - Session-based authentication stored in MySQL
-- Accounts are entirely optional — all browsing and playback works without signing in
+- Profile management (display name, email, password change)
+- Accounts are entirely optional -- all browsing and playback works without signing in
 
 ### Favorites & Collections
 - Heart icon to favorite any show (logged-in users)
@@ -45,8 +48,9 @@ A web application for searching and streaming live concert recordings from Archi
 |-------|-----------|
 | Frontend | Vanilla JavaScript (ES6 modules), HTML5, Tailwind CSS (CDN) |
 | Backend | Node.js, Express.js |
-| Database | MySQL (mysql2) |
+| Database | MySQL 5.7+ / MariaDB 10.3+ (mysql2) |
 | Auth | bcrypt, express-session, express-mysql-session |
+| Validation | express-validator |
 | Audio | HTML5 Audio API, Web Audio API |
 | Data Source | Archive.org public API |
 
@@ -59,7 +63,7 @@ A web application for searching and streaming live concert recordings from Archi
 ├── profile.html            # User profile, favorites, collections
 ├── collection.html         # Public collection view
 ├── admin.html              # Admin panel
-├── .htaccess               # Apache config for cPanel hosting
+├── .htaccess               # Apache proxy config for cPanel hosting
 ├── css/
 │   └── styles.css          # Custom styles and theme variables
 ├── js/
@@ -71,16 +75,16 @@ A web application for searching and streaming live concert recordings from Archi
 │   ├── player.js           # Audio player implementation
 │   ├── visualizer.js       # Web Audio visualization
 │   ├── bandConfig.js       # Band/collection configurations
-│   ├── utils.js            # Utility functions
+│   ├── utils.js            # Utility functions (formatting, XSS protection, toasts)
 │   ├── storage.js          # localStorage wrapper
-│   └── socialMeta.js       # Dynamic meta tags for SEO
+│   └── socialMeta.js       # Dynamic meta tags for SEO/sharing
 └── server/
     ├── package.json        # Node.js dependencies
     ├── index.js            # Express server entry point
     ├── install.js          # Interactive database setup script
     ├── .env.example        # Environment variable template
     ├── config/
-    │   └── database.js     # MySQL connection pool
+    │   └── database.js     # MySQL connection pool with keep-alive
     ├── middleware/
     │   └── auth.js         # Session authentication middleware
     ├── routes/
@@ -92,7 +96,7 @@ A web application for searching and streaming live concert recordings from Archi
     │   └── admin.js        # Admin API endpoints
     ├── services/
     │   ├── cacheService.js # Cache read/write/expire logic
-    │   └── archiveProxy.js # Archive.org API client
+    │   └── archiveProxy.js # Archive.org API client with retry logic
     └── schema/
         └── init.sql        # Database schema (all tables)
 ```
@@ -171,7 +175,7 @@ npm install
 node install.js           # creates tables and admin user
 ```
 
-5. **Keep Node.js Running** — use PM2 or cPanel's Node.js manager:
+5. **Keep Node.js Running** -- use PM2 or cPanel's Node.js manager:
 
 ```bash
 npm install -g pm2
@@ -180,11 +184,11 @@ pm2 save
 pm2 startup
 ```
 
-6. **Apache Proxy** — The included `.htaccess` file proxies `/api/*` requests to the Node.js backend on port 3001. If your cPanel uses Phusion Passenger instead, uncomment the Passenger lines in `.htaccess` and comment out the RewriteRule.
+6. **Apache Proxy** -- The included `.htaccess` file proxies `/api/*` requests to the Node.js backend on port 3001. If your cPanel uses Phusion Passenger instead, uncomment the Passenger lines in `.htaccess` and comment out the RewriteRule.
 
 ### Static-Only Mode (No Backend)
 
-The app works without the backend — just serve the files from any static host. Search and playback use Archive.org directly. User accounts, favorites, collections, and caching won't be available.
+The app works without the backend -- just serve the files from any static host. Search and playback use Archive.org directly. User accounts, favorites, collections, and caching won't be available.
 
 ```bash
 # Any of these work:
@@ -195,7 +199,7 @@ php -S localhost:8000
 
 ## Database Schema
 
-7 tables in MySQL:
+8 tables in MySQL:
 
 | Table | Purpose |
 |-------|---------|
@@ -206,46 +210,47 @@ php -S localhost:8000
 | `favorites` | User-to-show favorites with personal notes |
 | `collections` | Named, shareable curated show lists |
 | `collection_items` | Shows within collections (ordered) |
-| `sessions` | Server-side session storage |
+| `sessions` | Server-side session storage (express-mysql-session) |
 
 ## API Endpoints
 
 ### Public (no auth)
-- `GET /api/search?q=...&page=1&rows=10` — Search with caching
-- `GET /api/shows/:identifier` — Show metadata with caching
-- `GET /api/health` — Server health check
-- `GET /api/collections/:slug` — View public collection
+- `GET /api/search?q=...&page=1&rows=10` -- Search with caching
+- `GET /api/shows/:identifier` -- Show metadata with caching
+- `GET /api/health` -- Server health check
+- `GET /api/collections/:slug` -- View public collection
 
 ### Auth
-- `POST /api/auth/register` — Create account
-- `POST /api/auth/login` — Sign in
-- `POST /api/auth/logout` — Sign out
-- `GET /api/auth/me` — Check current session
-- `PUT /api/auth/profile` — Update profile/password
+- `POST /api/auth/register` -- Create account (rate-limited)
+- `POST /api/auth/login` -- Sign in (rate-limited)
+- `POST /api/auth/logout` -- Sign out
+- `GET /api/auth/me` -- Check current session
+- `PUT /api/auth/profile` -- Update profile/password
 
 ### Favorites (auth required)
-- `GET /api/favorites` — List favorites
-- `GET /api/favorites/check/:id` — Check if favorited
-- `POST /api/favorites` — Add favorite
-- `PUT /api/favorites/:id` — Update notes
-- `DELETE /api/favorites/:id` — Remove favorite
+- `GET /api/favorites` -- List favorites
+- `GET /api/favorites/check/:identifier` -- Check if favorited
+- `POST /api/favorites` -- Add favorite
+- `PUT /api/favorites/:identifier` -- Update notes
+- `DELETE /api/favorites/:identifier` -- Remove favorite
 
 ### Collections (auth for write)
-- `GET /api/collections` — List user's collections
-- `POST /api/collections` — Create collection
-- `PUT /api/collections/:slug` — Update collection
-- `DELETE /api/collections/:slug` — Delete collection
-- `POST /api/collections/:slug/items` — Add show to collection
-- `DELETE /api/collections/:slug/items/:id` — Remove show
+- `GET /api/collections` -- List user's collections
+- `POST /api/collections` -- Create collection
+- `GET /api/collections/:slug` -- View collection (public or owner)
+- `PUT /api/collections/:slug` -- Update collection
+- `DELETE /api/collections/:slug` -- Delete collection
+- `POST /api/collections/:slug/items` -- Add show to collection
+- `DELETE /api/collections/:slug/items/:identifier` -- Remove show
 
 ### Admin (admin auth required)
-- `GET /api/admin/stats` — Dashboard stats
-- `GET /api/admin/users` — List users
-- `POST /api/admin/users` — Create user
-- `PUT /api/admin/users/:id` — Update user role
-- `DELETE /api/admin/users/:id` — Delete user
-- `POST /api/admin/cache/clear` — Clear expired cache
-- `POST /api/admin/cache/purge` — Purge all cache
+- `GET /api/admin/stats` -- Dashboard stats
+- `GET /api/admin/users` -- List users (paginated)
+- `POST /api/admin/users` -- Create user
+- `PUT /api/admin/users/:id` -- Update user role
+- `DELETE /api/admin/users/:id` -- Delete user
+- `POST /api/admin/cache/clear` -- Clear expired cache
+- `POST /api/admin/cache/purge` -- Purge all cache
 
 ## Keyboard Shortcuts
 
@@ -254,14 +259,14 @@ php -S localhost:8000
 |-----|--------|
 | `/` | Focus search input |
 | `R` | Random show |
-| `1`, `2`, `3` | Switch view mode |
+| `1`, `2`, `3` | Switch view mode (List, Grid, Compact) |
 
 ### Player Page
 | Key | Action |
 |-----|--------|
 | `Space` / `K` | Play/Pause |
-| `←` / `→` | Seek ±5 seconds |
-| `J` / `L` | Seek ±10 seconds |
+| `Left Arrow` / `Right Arrow` | Seek +/-5 seconds |
+| `J` / `L` | Seek +/-10 seconds |
 | `M` | Mute toggle |
 | `N` | Next track |
 | `P` | Previous track |
@@ -277,12 +282,10 @@ php -S localhost:8000
 | `DB_NAME` | tapefinder | Database name |
 | `SESSION_SECRET` | | Random secret for sessions (generated by installer) |
 | `PORT` | 3001 | Server port |
-| `FRONTEND_ORIGIN` | http://localhost:8080 | CORS allowed origin (`*` for any) |
+| `FRONTEND_ORIGIN` | http://localhost:8080 | CORS allowed origin (`*` for any, comma-separated for multiple) |
 | `SEARCH_CACHE_TTL` | 21600 | Search cache lifetime in seconds (6h) |
 | `SHOW_CACHE_TTL` | 86400 | Show cache lifetime in seconds (24h) |
-| `ADMIN_USERNAME` | admin | Initial admin username (for install) |
-| `ADMIN_EMAIL` | admin@example.com | Initial admin email (for install) |
-| `ADMIN_PASSWORD` | | Initial admin password (for install) |
+| `ARCHIVE_API_BASE` | https://archive.org | Archive.org API base URL |
 
 ## Configuration
 
@@ -298,13 +301,23 @@ Edit `js/bandConfig.js`:
 }
 ```
 
-Add to `getAllBands()` for the dropdown, and add an `<option>` in `index.html`.
+Add to `getAllBands()` for the dropdown, and add a matching `<option>` in `index.html`.
 
 ### Cache TTLs
 
 Adjust `SEARCH_CACHE_TTL` and `SHOW_CACHE_TTL` in `.env` (values in seconds):
-- Search results: 21600 (6 hours) — balances freshness with API load
-- Show metadata: 86400 (24 hours) — metadata rarely changes
+- Search results: 21600 (6 hours) -- balances freshness with API load
+- Show metadata: 86400 (24 hours) -- metadata rarely changes
+
+## Security
+
+- All user-facing text is HTML-escaped to prevent XSS
+- SQL queries use parameterized statements to prevent injection
+- Passwords are hashed with bcrypt (12 rounds)
+- Session cookies are httpOnly with secure flag in production
+- Auth endpoints are rate-limited (20 requests per 15 minutes)
+- Show identifiers are validated against a strict allowlist pattern
+- CORS is configurable via environment variable
 
 ## Browser Requirements
 
@@ -318,7 +331,7 @@ Adjust `SEARCH_CACHE_TTL` and `SHOW_CACHE_TTL` in `.env` (values in seconds):
 
 ## License
 
-Share Ye Well License — See licence.md
+Share Ye Well License -- See licence.md
 
 ## Credits
 

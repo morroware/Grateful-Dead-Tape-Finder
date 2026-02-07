@@ -1,12 +1,14 @@
 // bandConfig.js - Band search configuration with expanded collection support
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 export const bandConfig = {
     // === SPECIAL OPTIONS ===
     'AllArchive': {
         query: 'mediatype:(etree)',
         title: 'All Archive.org Live Music',
         customSearch: false,
-        yearRange: [1900, 2025]
+        yearRange: [1900, CURRENT_YEAR]
     },
     
     // === DEAD FAMILY ===

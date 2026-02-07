@@ -2,7 +2,7 @@
  * search.js - Modern search with Ocean Blue theme
  */
 
-import { showLoading, hideLoading, showToast } from './utils.js';
+import { showLoading, hideLoading, showToast, escapeHtml } from './utils.js';
 import { getBandConfig } from './bandConfig.js';
 import { storage } from './storage.js';
 import { searchShows as apiSearch } from './api.js';
@@ -53,7 +53,7 @@ export async function searchShows(page = 1) {
 
         if (yearFrom || yearTo) {
             const fromYear = yearFrom || '1900';
-            const toYear = yearTo || '2025';
+            const toYear = yearTo || String(new Date().getFullYear());
             baseQuery += ` AND year:[${fromYear} TO ${toYear}]`;
         } else if (config.yearRange) {
             baseQuery += ` AND year:[${config.yearRange[0]} TO ${config.yearRange[1]}]`;
@@ -197,20 +197,21 @@ function createEnhancedShowCard(show) {
         tags += `<span class="tag" style="background:#1e3a5f;color:#93c5fd;">★ ${show.avg_rating.toFixed(1)}</span>`;
     }
 
-    const artist = show.creator || 'Unknown Artist';
-    const showTitle = show.title || show.date || 'Unknown Show';
+    const artist = escapeHtml(show.creator || 'Unknown Artist');
+    const showTitle = escapeHtml(show.title || show.date || 'Unknown Show');
+    const safeId = escapeHtml(show.identifier);
 
     return `
         <div class="show-card rounded-lg p-4 cursor-pointer transition-all"
-             onclick="openPlayerPage('${show.identifier}')">
+             onclick="openPlayerPage('${safeId}')">
             <div class="flex items-start justify-between gap-4">
                 <div class="flex-1 min-w-0">
                     <div class="text-xs text-zinc-500 mb-1">${artist}</div>
                     <h3 class="font-medium text-white mb-2 leading-snug">${showTitle}</h3>
                     <div class="flex flex-wrap gap-1.5 mb-2">${tags}</div>
                     <div class="flex items-center gap-4 text-xs text-zinc-500">
-                        ${show.venue ? `<span>${show.venue}</span>` : ''}
-                        ${show.date || show.year ? `<span>${show.date || show.year}</span>` : ''}
+                        ${show.venue ? `<span>${escapeHtml(show.venue)}</span>` : ''}
+                        ${show.date || show.year ? `<span>${escapeHtml(show.date || String(show.year))}</span>` : ''}
                     </div>
                 </div>
                 <div class="text-right flex-shrink-0">
@@ -223,23 +224,24 @@ function createEnhancedShowCard(show) {
 }
 
 function createGridCard(show) {
-    const artist = show.creator || 'Unknown Artist';
-    const showTitle = show.title || show.date || 'Unknown Show';
+    const artist = escapeHtml(show.creator || 'Unknown Artist');
+    const showTitle = escapeHtml(show.title || show.date || 'Unknown Show');
+    const safeId = escapeHtml(show.identifier);
 
     const src = show.source ? show.source.toLowerCase() : '';
     const sourceType = src.includes('sbd') ? 'SBD' : src.includes('aud') ? 'AUD' : '';
 
     return `
         <div class="show-card rounded-lg p-4 cursor-pointer h-full flex flex-col"
-             onclick="openPlayerPage('${show.identifier}')">
+             onclick="openPlayerPage('${safeId}')">
             <div class="flex-1">
                 <div class="text-xs text-zinc-500 mb-1">${artist}</div>
                 <h4 class="font-medium text-sm text-white mb-2 leading-snug" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                     ${showTitle}
                 </h4>
                 <div class="text-xs text-zinc-500 space-y-1">
-                    ${show.date || show.year ? `<div>${show.date || show.year}</div>` : ''}
-                    ${show.venue ? `<div class="truncate">${show.venue}</div>` : ''}
+                    ${show.date || show.year ? `<div>${escapeHtml(show.date || String(show.year))}</div>` : ''}
+                    ${show.venue ? `<div class="truncate">${escapeHtml(show.venue)}</div>` : ''}
                 </div>
             </div>
             <div class="mt-3 pt-3 border-t border-zinc-800 flex items-center justify-between text-xs">
@@ -256,13 +258,14 @@ function createGridCard(show) {
 function createCompactCard(show) {
     const src = show.source ? show.source.toLowerCase() : '';
     const sourceType = src.includes('sbd') ? 'SBD' : src.includes('aud') ? 'AUD' : src.includes('matrix') ? 'MTX' : '';
+    const safeId = escapeHtml(show.identifier);
 
     return `
         <div class="show-card px-4 py-2.5 rounded-lg flex items-center gap-4 cursor-pointer"
-             onclick="openPlayerPage('${show.identifier}')">
-            <div class="w-20 text-xs text-zinc-500 flex-shrink-0">${show.date || show.year || '—'}</div>
+             onclick="openPlayerPage('${safeId}')">
+            <div class="w-20 text-xs text-zinc-500 flex-shrink-0">${escapeHtml(show.date || String(show.year || '')) || '—'}</div>
             <div class="flex-1 min-w-0">
-                <div class="text-sm text-white truncate">${show.title || 'Unknown Show'}</div>
+                <div class="text-sm text-white truncate">${escapeHtml(show.title || 'Unknown Show')}</div>
             </div>
             <div class="flex items-center gap-3 flex-shrink-0 text-xs">
                 ${sourceType ? `<span class="tag tag-${sourceType.toLowerCase()}">${sourceType}</span>` : ''}

@@ -196,10 +196,10 @@
           <!-- Year Range -->
           <div class="flex items-center gap-2">
             <span class="text-xs text-zinc-500">Year:</span>
-            <input type="number" id="yearFrom" name="yearFrom" min="1900" max="2025" placeholder="From"
+            <input type="number" id="yearFrom" name="yearFrom" min="1900" max="2030" placeholder="From"
                    class="w-20 px-2 py-1.5 rounded text-sm">
             <span class="text-zinc-600">-</span>
-            <input type="number" id="yearTo" name="yearTo" min="1900" max="2025" placeholder="To"
+            <input type="number" id="yearTo" name="yearTo" min="1900" max="2030" placeholder="To"
                    class="w-20 px-2 py-1.5 rounded text-sm">
           </div>
 
@@ -319,17 +319,12 @@
         });
       });
 
-      // Keyboard shortcuts
+      // Keyboard shortcuts for view switching (1/2/3)
+      // Note: '/' and 'R' shortcuts are handled by search.js
       document.addEventListener('keydown', (e) => {
         if (e.target.matches('input, select, textarea')) return;
 
-        if (e.key === '/') {
-          e.preventDefault();
-          document.getElementById('searchQuery')?.focus();
-        } else if (e.key.toLowerCase() === 'r') {
-          e.preventDefault();
-          document.getElementById('randomShow')?.click();
-        } else if (e.key === '1' || e.key === '2' || e.key === '3') {
+        if (e.key === '1' || e.key === '2' || e.key === '3') {
           const views = ['list', 'grid', 'compact'];
           document.querySelector(`[data-view="${views[parseInt(e.key) - 1]}"]`)?.click();
         }

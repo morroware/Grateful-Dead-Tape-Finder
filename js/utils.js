@@ -3,6 +3,21 @@
  */
 
 /**
+ * Escape HTML special characters to prevent XSS
+ * @param {string} str - String to escape
+ * @returns {string} Escaped string safe for innerHTML
+ */
+export function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+/**
  * Format time from seconds to human-readable format
  * @param {number} sec - Time in seconds
  * @returns {string} Formatted time string (e.g., "3:45" or "1:23:45")
@@ -50,7 +65,7 @@ export function showPlayerError(msg) {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                       d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span>${msg}</span>
+            <span>${escapeHtml(msg)}</span>
         </div>
         <button class="mt-2 bg-red-700 hover:bg-red-600 px-3 py-1 rounded text-sm"
                 onclick="window.retryCurrentTrack()">
