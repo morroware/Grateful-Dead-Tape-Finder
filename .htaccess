@@ -1,0 +1,55 @@
+# Apache configuration for cPanel / shared hosting
+# This routes API requests to the Node.js backend via proxy
+
+# Enable rewrite engine
+RewriteEngine On
+
+# Proxy API requests to Node.js backend
+# Adjust port to match your .env PORT setting
+RewriteRule ^api/(.*)$ http://127.0.0.1:3001/api/$1 [P,L]
+
+# If using Passenger (common on cPanel with Node.js):
+# Uncomment these lines and comment out the RewriteRule above
+# PassengerAppRoot /home/username/Grateful-Dead-Tape-Finder/server
+# PassengerAppType node
+# PassengerStartupFile index.js
+
+# Security headers
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Prevent access to server directory and sensitive files
+<FilesMatch "\.(env|sql|md)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+RedirectMatch 403 /server/
+RedirectMatch 403 /node_modules/
+
+# MIME types for ES modules
+<IfModule mod_mime.c>
+  AddType application/javascript .js
+  AddType text/css .css
+</IfModule>
+
+# Caching for static assets
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/css "access plus 1 week"
+  ExpiresByType application/javascript "access plus 1 week"
+  ExpiresByType image/x-icon "access plus 1 month"
+</IfModule>
+
+# Gzip compression
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json
+</IfModule>

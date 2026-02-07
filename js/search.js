@@ -5,6 +5,7 @@
 import { showLoading, hideLoading, showToast } from './utils.js';
 import { getBandConfig } from './bandConfig.js';
 import { storage } from './storage.js';
+import { searchShows as apiSearch } from './api.js';
 
 // Search state
 let currentPage = 1;
@@ -14,32 +15,6 @@ let currentView = 'list';
 let currentResults = [];
 let activeFilters = new Set();
 let lastSearchParams = null;
-
-// Retry configuration
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000;
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function fetchWithRetry(url, retries = MAX_RETRIES) {
-    for (let i = 0; i < retries; i++) {
-        try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            console.warn(`Fetch attempt ${i + 1} failed:`, error.message);
-            if (i === retries - 1) {
-                throw error;
-            }
-            await sleep(RETRY_DELAY * (i + 1));
-        }
-    }
-}
 
 export async function searchShows(page = 1) {
     const searchQueryInput = document.getElementById('searchQuery');
@@ -51,17 +26,17 @@ export async function searchShows(page = 1) {
     const yearFrom = yearFromInput ? yearFromInput.value : '';
     const yearTo = yearToInput ? yearToInput.value : '';
     const band = bandSelector ? bandSelector.value : 'AllArchive';
-    
+
     lastSearchParams = { query, yearFrom, yearTo, band, page };
-    
+
     showLoading();
     currentPage = page;
-    
+
     try {
         const config = getBandConfig(band);
         let baseQuery = config.query || 'mediatype:(etree)';
         const bandTitle = config.title;
-        
+
         if (band === 'AllArchive') {
             baseQuery = 'mediatype:(etree)';
             if (query) baseQuery += ` AND (${query})`;
@@ -75,7 +50,7 @@ export async function searchShows(page = 1) {
             baseQuery = 'mediatype:(etree)';
             if (query) baseQuery += ` AND (${query})`;
         }
-        
+
         if (yearFrom || yearTo) {
             const fromYear = yearFrom || '1900';
             const toYear = yearTo || '2025';
@@ -83,7 +58,7 @@ export async function searchShows(page = 1) {
         } else if (config.yearRange) {
             baseQuery += ` AND year:[${config.yearRange[0]} TO ${config.yearRange[1]}]`;
         }
-        
+
         activeFilters.forEach(filter => {
             if (filter === 'five-star') {
                 baseQuery += ' AND avg_rating:[4.5 TO 5]';
@@ -95,21 +70,16 @@ export async function searchShows(page = 1) {
                 baseQuery += ' AND source:(matrix OR "matrix")';
             }
         });
-        
+
         document.title = `${bandTitle} - Live Music Archive`;
 
-        const url = `https://archive.org/advancedsearch.php?` +
-            `q=${encodeURIComponent(baseQuery)}` +
-            `&fl[]=identifier,title,year,venue,coverage,downloads,source,creator,date,avg_rating` +
-            `&sort[]=downloads+desc&output=json` +
-            `&rows=${resultsPerPage}&page=${page}`;
-        
-        const data = await fetchWithRetry(url);
-        
+        // Use API layer (backend with Archive.org fallback)
+        const data = await apiSearch(baseQuery, page, resultsPerPage);
+
         hideLoading();
         const resultsDiv = document.getElementById('results');
-        
-        if (!data.response || !data.response.docs || data.response.docs.length === 0) {
+
+        if (!data.docs || data.docs.length === 0) {
             if (resultsDiv) {
                 resultsDiv.innerHTML = `
                     <div class="text-center py-16 animate-fade-in">
@@ -125,16 +95,16 @@ export async function searchShows(page = 1) {
             updatePagination(0);
             return;
         }
-        
-        totalResults = data.response.numFound;
-        currentResults = data.response.docs;
-        
+
+        totalResults = data.numFound;
+        currentResults = data.docs;
+
         if (resultsDiv) {
             updateResultsDisplay();
         }
-        
+
         updatePagination();
-        
+
     } catch (error) {
         console.error('Search error:', error);
         hideLoading();
@@ -145,15 +115,15 @@ export async function searchShows(page = 1) {
 function handleSearchError(error) {
     const resultsDiv = document.getElementById('results');
     if (!resultsDiv) return;
-    
+
     const errorMessage = error.message || 'Unknown error';
     const isNetworkError = errorMessage.includes('fetch') || errorMessage.includes('network');
-    
+
     resultsDiv.innerHTML = `
         <div class="text-center py-16 animate-fade-in">
             <div class="inline-flex items-center justify-center w-20 h-20 bg-red-900 bg-opacity-30 rounded-full mb-6">
                 <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
             </div>
@@ -161,12 +131,12 @@ function handleSearchError(error) {
                 ${isNetworkError ? 'Connection Problem' : 'Search Error'}
             </h3>
             <p class="text-gray-400 mb-6 max-w-md mx-auto">
-                ${isNetworkError 
-                    ? 'Unable to reach Archive.org. Please check your connection.' 
+                ${isNetworkError
+                    ? 'Unable to reach Archive.org. Please check your connection.'
                     : 'An error occurred while searching. This may be temporary.'}
             </p>
-            <button 
-                onclick="window.retryLastSearch()" 
+            <button
+                onclick="window.retryLastSearch()"
                 class="px-6 py-3 bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-700 hover:to-cyan-700 text-white font-semibold rounded-xl transition-all transform hover:scale-105 shadow-lg">
                 Try Again
             </button>
@@ -176,17 +146,17 @@ function handleSearchError(error) {
 window.retryLastSearch = function() {
     if (lastSearchParams) {
         const { query, yearFrom, yearTo, band, page } = lastSearchParams;
-        
+
         const searchQueryInput = document.getElementById('searchQuery');
         const yearFromInput = document.getElementById('yearFrom');
         const yearToInput = document.getElementById('yearTo');
         const bandSelector = document.getElementById('bandSelector');
-        
+
         if (searchQueryInput) searchQueryInput.value = query;
         if (yearFromInput) yearFromInput.value = yearFrom;
         if (yearToInput) yearToInput.value = yearTo;
         if (bandSelector) bandSelector.value = band;
-        
+
         showToast('Retrying search...', 'info');
         searchShows(page);
     }
@@ -195,7 +165,7 @@ window.retryLastSearch = function() {
 function updateResultsDisplay() {
     const resultsDiv = document.getElementById('results');
     if (!resultsDiv) return;
-    
+
     if (currentView === 'grid') {
         resultsDiv.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 min-h-[400px]';
     } else if (currentView === 'compact') {
@@ -203,10 +173,10 @@ function updateResultsDisplay() {
     } else {
         resultsDiv.className = 'space-y-4 min-h-[400px]';
     }
-    
+
     resultsDiv.innerHTML = currentResults.map((show, index) => {
-        const card = currentView === 'grid' ? createGridCard(show) : 
-                     currentView === 'compact' ? createCompactCard(show) : 
+        const card = currentView === 'grid' ? createGridCard(show) :
+                     currentView === 'compact' ? createCompactCard(show) :
                      createEnhancedShowCard(show);
         return `<div class="animate-fade-in" style="animation-delay: ${index * 0.05}s">${card}</div>`;
     }).join('');
@@ -328,7 +298,7 @@ export function changePage(delta) {
 
 export function switchView(view) {
     currentView = view;
-    
+
     document.querySelectorAll('[data-view]').forEach(btn => {
         if (btn.dataset.view === view) {
             btn.classList.add('bg-sky-600', 'text-white');
@@ -338,11 +308,11 @@ export function switchView(view) {
             btn.classList.add('text-gray-400', 'hover:bg-gray-700');
         }
     });
-    
+
     if (currentResults.length > 0) {
         updateResultsDisplay();
     }
-    
+
     localStorage.setItem('tapeFinder_viewMode', view);
 }
 
@@ -356,7 +326,7 @@ export function openPlayerPage(identifier) {
 
 export function initSearchPage() {
     console.log('Initializing modern search page...');
-    
+
     const searchButton = document.getElementById('searchButton');
     const searchQuery = document.getElementById('searchQuery');
     const yearFrom = document.getElementById('yearFrom');
@@ -378,13 +348,11 @@ export function initSearchPage() {
             yearFrom.value = config.yearRange[0];
             yearTo.value = config.yearRange[1];
         } else {
-            // Leave year range wide open for bands without specific range
             yearFrom.value = '';
             yearTo.value = '';
         }
     }
 
-    // Prevent form submission
     const searchForm = document.getElementById('searchForm');
     if (searchForm) {
         searchForm.addEventListener('submit', (e) => {
@@ -411,13 +379,13 @@ export function initSearchPage() {
 
     if (yearFrom) yearFrom.addEventListener('change', () => searchShows(1));
     if (yearTo) yearTo.addEventListener('change', () => searchShows(1));
-    
+
     if (bandSelector) {
         const savedBand = storage.getSelectedBand();
         if (savedBand && bandSelector.querySelector(`option[value="${savedBand}"]`)) {
             bandSelector.value = savedBand;
         }
-        
+
         bandSelector.addEventListener('change', function() {
             storage.setSelectedBand(this.value);
             currentPage = 1;
@@ -428,7 +396,6 @@ export function initSearchPage() {
                     yearFrom.value = config.yearRange[0];
                     yearTo.value = config.yearRange[1];
                 } else {
-                    // Leave year range wide open for bands without specific range
                     yearFrom.value = '';
                     yearTo.value = '';
                 }
@@ -442,7 +409,7 @@ export function initSearchPage() {
     filterButtons.forEach(button => {
         button.addEventListener('click', function() {
             const filter = this.dataset.filter;
-            
+
             if (activeFilters.has(filter)) {
                 activeFilters.delete(filter);
                 this.classList.remove('active');
@@ -450,14 +417,14 @@ export function initSearchPage() {
                 activeFilters.add(filter);
                 this.classList.add('active');
             }
-            
+
             searchShows(1);
         });
     });
-    
+
     document.addEventListener('keydown', (e) => {
         if (e.target.matches('input, select, textarea')) return;
-        
+
         switch(e.key.toLowerCase()) {
             case '/':
                 e.preventDefault();

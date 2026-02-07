@@ -3,6 +3,7 @@
 import { formatTime, shuffleArray, showPlayerError, showToast } from './utils.js';
 import { storage } from './storage.js';
 import { Visualizer } from './visualizer.js';
+import { getShowMetadata } from './api.js';
 
 export class Player {
     constructor() {
@@ -15,7 +16,8 @@ export class Player {
         this.lastVolume = 1;
         this.playbackRate = 1;
         this.isLoadingTrack = false; // Prevent double-loading
-        
+        this.showMetadata = null; // Store metadata for favorites
+
         // DOM elements
         this.audio = null;
         this.trackTitle = null;
@@ -27,10 +29,10 @@ export class Player {
         this.totalTimeEl = null;
         this.playlistContainer = null;
         this.playIcon = null;
-        
+
         // Visualizer
         this.visualizer = new Visualizer();
-        
+
         // Error tracking
         this.consecutiveErrors = 0;
         this.maxConsecutiveErrors = 3;
@@ -46,17 +48,15 @@ export class Player {
         if (showTitleEl) showTitleEl.textContent = 'Loading Show...';
 
         try {
-            const resp = await fetch(`https://archive.org/metadata/${identifier}`);
-            
-            if (!resp.ok) {
-                throw new Error(`Server returned ${resp.status}: ${resp.statusText}`);
-            }
-            
-            const data = await resp.json();
+            // Use API layer (backend cache with Archive.org fallback)
+            const data = await getShowMetadata(identifier);
 
             if (!data || !data.metadata) {
                 throw new Error('Invalid response from server');
             }
+
+            // Store metadata for favorites/collections
+            this.showMetadata = data.metadata;
 
             // Determine band name
             let bandName = 'Grateful Dead';

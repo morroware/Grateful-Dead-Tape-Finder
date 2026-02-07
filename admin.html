@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Live Music Archive</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    * { box-sizing: border-box; }
+    body { background: #0a0a0b; color: #e4e4e7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .card { background: #18181b; border: 1px solid #27272a; }
+    .stat-card { background: #18181b; border: 1px solid #27272a; }
+    table { border-collapse: collapse; }
+    th { text-align: left; color: #a1a1aa; font-weight: 500; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { border-top: 1px solid #27272a; }
+    input[type="text"], input[type="email"], input[type="password"] {
+      background: #0a0a0b; border: 1px solid #27272a; color: #e4e4e7;
+    }
+    input:focus { outline: none; border-color: #3b82f6; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- Header -->
+  <header class="border-b border-zinc-800 bg-zinc-900/80 backdrop-blur-sm sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="flex items-center gap-2">
+          <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+          </svg>
+        </a>
+        <span class="text-lg font-semibold text-white">Admin Panel</span>
+        <span class="px-2 py-0.5 bg-yellow-600/20 text-yellow-400 text-xs rounded">Admin</span>
+      </div>
+      <div id="auth-area"></div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-8">
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" id="stats-grid">
+      <div class="stat-card rounded-lg p-4">
+        <div class="text-xs text-zinc-500 mb-1">Total Users</div>
+        <div class="text-2xl font-bold text-white" id="stat-users">-</div>
+      </div>
+      <div class="stat-card rounded-lg p-4">
+        <div class="text-xs text-zinc-500 mb-1">Total Favorites</div>
+        <div class="text-2xl font-bold text-white" id="stat-favorites">-</div>
+      </div>
+      <div class="stat-card rounded-lg p-4">
+        <div class="text-xs text-zinc-500 mb-1">Cached Searches</div>
+        <div class="text-2xl font-bold text-white" id="stat-searches">-</div>
+      </div>
+      <div class="stat-card rounded-lg p-4">
+        <div class="text-xs text-zinc-500 mb-1">Cached Shows</div>
+        <div class="text-2xl font-bold text-white" id="stat-shows">-</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex border-b border-zinc-800 mb-6">
+      <button class="tab-btn active px-4 py-3 text-sm font-medium border-b-2 border-blue-500 text-blue-400 transition-colors" data-tab="users">Users</button>
+      <button class="tab-btn px-4 py-3 text-sm font-medium text-zinc-400 border-b-2 border-transparent hover:text-zinc-200 transition-colors" data-tab="cache">Cache</button>
+    </div>
+
+    <!-- Users Tab -->
+    <div id="tab-users" class="tab-content">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-medium text-white">User Management</h3>
+        <button id="show-add-user" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-sm text-white rounded-lg transition-colors">+ Add User</button>
+      </div>
+
+      <!-- Add user form -->
+      <div id="add-user-form" class="card rounded-lg p-4 mb-4 hidden">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <input type="text" id="add-username" placeholder="Username" class="px-3 py-2 rounded-lg text-sm">
+          <input type="email" id="add-email" placeholder="Email" class="px-3 py-2 rounded-lg text-sm">
+          <input type="password" id="add-password" placeholder="Password" class="px-3 py-2 rounded-lg text-sm">
+          <div class="flex gap-2">
+            <label class="flex items-center gap-2 text-sm text-zinc-400">
+              <input type="checkbox" id="add-is-admin" class="rounded"> Admin
+            </label>
+            <button id="add-user-btn" class="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-sm text-white rounded-lg transition-colors">Create</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card rounded-lg overflow-hidden">
+        <table class="w-full">
+          <thead>
+            <tr class="text-left">
+              <th class="px-4 py-3">Username</th>
+              <th class="px-4 py-3">Email</th>
+              <th class="px-4 py-3 hidden md:table-cell">Favorites</th>
+              <th class="px-4 py-3 hidden md:table-cell">Joined</th>
+              <th class="px-4 py-3">Role</th>
+              <th class="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody id="users-table"></tbody>
+        </table>
+      </div>
+      <div id="users-pagination" class="flex items-center justify-center gap-3 py-4"></div>
+    </div>
+
+    <!-- Cache Tab -->
+    <div id="tab-cache" class="tab-content hidden">
+      <h3 class="text-lg font-medium text-white mb-4">Cache Management</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div class="card rounded-lg p-4">
+          <h4 class="text-sm font-medium text-white mb-2">Search Cache</h4>
+          <div class="text-3xl font-bold text-blue-400 mb-1" id="cache-search-active">-</div>
+          <div class="text-xs text-zinc-500">active entries (<span id="cache-search-total">-</span> total rows)</div>
+        </div>
+        <div class="card rounded-lg p-4">
+          <h4 class="text-sm font-medium text-white mb-2">Show Cache</h4>
+          <div class="text-3xl font-bold text-blue-400 mb-1" id="cache-show-active">-</div>
+          <div class="text-xs text-zinc-500">active shows (<span id="cache-track-total">-</span> tracks)</div>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <button id="clear-expired-btn" class="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 text-sm text-white rounded-lg transition-colors">
+          Clear Expired Entries
+        </button>
+        <button id="purge-all-btn" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-sm text-white rounded-lg transition-colors">
+          Purge All Cache
+        </button>
+      </div>
+      <div id="cache-message" class="text-sm mt-3"></div>
+
+      <!-- Top Favorited Shows -->
+      <div class="mt-8">
+        <h4 class="text-sm font-medium text-white mb-3">Top Favorited Shows</h4>
+        <div id="top-favorited" class="space-y-2"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <script type="module">
+    import { initAuth } from './js/auth.js';
+    import { getAdminStats, getAdminUsers, adminUpdateUser, adminDeleteUser, adminCreateUser, adminClearCache, adminPurgeCache } from './js/api.js';
+    import { showToast } from './js/utils.js';
+
+    let currentUserPage = 1;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await initAuth().catch(() => null);
+      if (!user || !user.is_admin) {
+        document.querySelector('main').innerHTML = `
+          <div class="text-center py-16">
+            <h2 class="text-xl font-bold text-red-400 mb-2">Access Denied</h2>
+            <p class="text-zinc-400 mb-4">Admin privileges required.</p>
+            <a href="index.html" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm">Go Home</a>
+          </div>`;
+        return;
+      }
+
+      loadStats();
+      loadUsers(1);
+
+      // Tab switching
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active', 'text-blue-400', 'border-blue-500'); b.classList.add('text-zinc-400', 'border-transparent'); });
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+          btn.classList.add('active', 'text-blue-400', 'border-blue-500');
+          btn.classList.remove('text-zinc-400', 'border-transparent');
+          document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+        });
+      });
+
+      // Add user form
+      document.getElementById('show-add-user').addEventListener('click', () => {
+        document.getElementById('add-user-form').classList.toggle('hidden');
+      });
+
+      document.getElementById('add-user-btn').addEventListener('click', async () => {
+        try {
+          await adminCreateUser({
+            username: document.getElementById('add-username').value.trim(),
+            email: document.getElementById('add-email').value.trim(),
+            password: document.getElementById('add-password').value,
+            is_admin: document.getElementById('add-is-admin').checked
+          });
+          showToast('User created', 'success');
+          document.getElementById('add-user-form').classList.add('hidden');
+          loadUsers(currentUserPage);
+          loadStats();
+        } catch (e) {
+          showToast(e.message || 'Failed', 'error');
+        }
+      });
+
+      // Cache buttons
+      document.getElementById('clear-expired-btn').addEventListener('click', async () => {
+        try {
+          const result = await adminClearCache();
+          document.getElementById('cache-message').innerHTML = `<span class="text-green-400">Cleared ${result.searchDeleted} search + ${result.showsDeleted} show entries</span>`;
+          loadStats();
+        } catch (e) {
+          document.getElementById('cache-message').innerHTML = '<span class="text-red-400">Failed to clear</span>';
+        }
+      });
+
+      document.getElementById('purge-all-btn').addEventListener('click', async () => {
+        if (!confirm('Purge ALL cached data? This cannot be undone.')) return;
+        try {
+          await adminPurgeCache();
+          document.getElementById('cache-message').innerHTML = '<span class="text-green-400">All cache purged</span>';
+          loadStats();
+        } catch (e) {
+          document.getElementById('cache-message').innerHTML = '<span class="text-red-400">Failed to purge</span>';
+        }
+      });
+    });
+
+    async function loadStats() {
+      try {
+        const stats = await getAdminStats();
+        if (!stats) return;
+
+        document.getElementById('stat-users').textContent = stats.users.total;
+        document.getElementById('stat-favorites').textContent = stats.favorites.total;
+        document.getElementById('stat-searches').textContent = stats.cache.activeSearchEntries;
+        document.getElementById('stat-shows').textContent = stats.cache.activeShowEntries;
+
+        document.getElementById('cache-search-active').textContent = stats.cache.activeSearchEntries;
+        document.getElementById('cache-search-total').textContent = stats.cache.totalSearchRows;
+        document.getElementById('cache-show-active').textContent = stats.cache.activeShowEntries;
+        document.getElementById('cache-track-total').textContent = stats.cache.totalTracks;
+
+        const topEl = document.getElementById('top-favorited');
+        if (stats.favorites.topShows && stats.favorites.topShows.length > 0) {
+          topEl.innerHTML = stats.favorites.topShows.map(s => `
+            <div class="flex items-center justify-between py-2 px-3 bg-zinc-800/50 rounded-lg">
+              <span class="text-sm text-zinc-300 truncate">${escapeHtml(s.title || s.identifier)}</span>
+              <span class="text-xs text-zinc-500 flex-shrink-0 ml-2">${s.fav_count} favs</span>
+            </div>
+          `).join('');
+        } else {
+          topEl.innerHTML = '<div class="text-sm text-zinc-500">No favorites yet</div>';
+        }
+      } catch (e) {
+        console.error('Stats error:', e);
+      }
+    }
+
+    async function loadUsers(page) {
+      currentUserPage = page;
+      try {
+        const data = await getAdminUsers(page);
+        if (!data) return;
+
+        const tbody = document.getElementById('users-table');
+        tbody.innerHTML = data.users.map(u => `
+          <tr>
+            <td class="px-4 py-3 text-sm text-white">${escapeHtml(u.username)}</td>
+            <td class="px-4 py-3 text-sm text-zinc-400">${escapeHtml(u.email)}</td>
+            <td class="px-4 py-3 text-sm text-zinc-400 hidden md:table-cell">${u.fav_count || 0}</td>
+            <td class="px-4 py-3 text-sm text-zinc-500 hidden md:table-cell">${new Date(u.created_at).toLocaleDateString()}</td>
+            <td class="px-4 py-3">
+              <button class="toggle-admin text-xs px-2 py-1 rounded ${u.is_admin ? 'bg-yellow-600/20 text-yellow-400' : 'bg-zinc-700 text-zinc-400'}" data-id="${u.id}" data-admin="${u.is_admin ? 1 : 0}">
+                ${u.is_admin ? 'Admin' : 'User'}
+              </button>
+            </td>
+            <td class="px-4 py-3">
+              <button class="del-user text-xs text-red-500 hover:text-red-400" data-id="${u.id}">Delete</button>
+            </td>
+          </tr>
+        `).join('');
+
+        tbody.querySelectorAll('.toggle-admin').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const newAdmin = btn.dataset.admin === '0';
+            try {
+              await adminUpdateUser(btn.dataset.id, { is_admin: newAdmin });
+              showToast(newAdmin ? 'Promoted to admin' : 'Demoted to user', 'success');
+              loadUsers(currentUserPage);
+            } catch (e) {
+              showToast(e.message || 'Failed', 'error');
+            }
+          });
+        });
+
+        tbody.querySelectorAll('.del-user').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            if (!confirm('Delete this user? This removes all their favorites and collections.')) return;
+            try {
+              await adminDeleteUser(btn.dataset.id);
+              showToast('User deleted', 'info');
+              loadUsers(currentUserPage);
+              loadStats();
+            } catch (e) {
+              showToast(e.message || 'Failed', 'error');
+            }
+          });
+        });
+
+        // Pagination
+        const pagEl = document.getElementById('users-pagination');
+        if (data.totalPages > 1) {
+          pagEl.innerHTML = `
+            <button class="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-sm ${page <= 1 ? 'opacity-40' : ''}" ${page <= 1 ? 'disabled' : ''} onclick="window.loadUsersPage(${page - 1})">Prev</button>
+            <span class="text-sm text-zinc-500">Page ${page} of ${data.totalPages}</span>
+            <button class="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-sm ${page >= data.totalPages ? 'opacity-40' : ''}" ${page >= data.totalPages ? 'disabled' : ''} onclick="window.loadUsersPage(${page + 1})">Next</button>
+          `;
+        } else {
+          pagEl.innerHTML = '';
+        }
+      } catch (e) {
+        console.error('Users error:', e);
+      }
+    }
+
+    window.loadUsersPage = (p) => loadUsers(p);
+
+    function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+  </script>
+</body>
+</html>
