@@ -3,8 +3,8 @@
  * Calls backend first, falls back to direct Archive.org if backend is unavailable
  */
 
-// Resolve API path relative to this module's location, so it works in subdirectory deployments
-const API_BASE = new URL('../api', import.meta.url).pathname;
+// Route through index.php directly — works on any hosting without mod_rewrite
+const API_BASE = new URL('../api/index.php', import.meta.url).pathname;
 let backendAvailable = null; // null = unknown, true/false after first check
 
 async function apiCall(endpoint, options = {}) {
@@ -16,16 +16,24 @@ async function apiCall(endpoint, options = {}) {
         });
 
         if (!response.ok) {
-            const data = await response.json().catch(() => ({}));
-            const error = new Error(data.error || `HTTP ${response.status}`);
-            error.status = response.status;
-            throw error;
+            const data = await response.json().catch(() => null);
+            if (data && data.error) {
+                // Genuine API error from our backend (auth failures, validation, etc.)
+                const error = new Error(data.error);
+                error.status = response.status;
+                throw error;
+            }
+            // Non-JSON error response (Apache 404 page, server misconfiguration, etc.)
+            // Treat as backend unavailable so Archive.org fallback can kick in
+            backendAvailable = false;
+            console.warn('Backend not responding correctly:', response.status);
+            return null;
         }
 
         backendAvailable = true;
         return await response.json();
     } catch (error) {
-        if (error.status) throw error; // Re-throw API errors (4xx)
+        if (error.status) throw error; // Re-throw genuine API errors
         // Network error — backend unavailable
         backendAvailable = false;
         console.warn('Backend unavailable:', error.message);
