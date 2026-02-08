@@ -1,18 +1,7 @@
 # Apache configuration for cPanel / shared hosting
-# This routes API requests to the Node.js backend via proxy
+# The PHP backend lives in api/ — no proxy needed.
 
-# Enable rewrite engine
 RewriteEngine On
-
-# Proxy API requests to Node.js backend
-# Adjust port to match your .env PORT setting
-RewriteRule ^api/(.*)$ http://127.0.0.1:3001/api/$1 [P,L]
-
-# If using Passenger (common on cPanel with Node.js):
-# Uncomment these lines and comment out the RewriteRule above
-# PassengerAppRoot /home/username/Grateful-Dead-Tape-Finder/server
-# PassengerAppType node
-# PassengerStartupFile index.js
 
 # Security headers
 <IfModule mod_headers.c>
@@ -21,7 +10,7 @@ RewriteRule ^api/(.*)$ http://127.0.0.1:3001/api/$1 [P,L]
   Header set X-XSS-Protection "1; mode=block"
 </IfModule>
 
-# Prevent access to server directory and sensitive files
+# Prevent access to sensitive files
 <FilesMatch "\.(env|sql|md)$">
   <IfModule mod_authz_core.c>
     Require all denied
@@ -32,6 +21,7 @@ RewriteRule ^api/(.*)$ http://127.0.0.1:3001/api/$1 [P,L]
   </IfModule>
 </FilesMatch>
 
+# Block direct access to server/ (Node.js backend, not used with PHP)
 RedirectMatch 403 /server/
 RedirectMatch 403 /node_modules/
 

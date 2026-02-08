@@ -1,6 +1,6 @@
 # Live Music Archive Explorer
 
-A web application for searching and streaming live concert recordings from Archive.org's etree collection. Features a Node.js backend with MySQL caching, optional user accounts, favorites, shareable collections, and an admin panel.
+A web application for searching and streaming live concert recordings from Archive.org's etree collection. Features a PHP backend with MySQL caching, optional user accounts, favorites, shareable collections, and an admin panel.
 
 **Live Demo:** https://gratefuldeadparkinglots.com
 
@@ -17,15 +17,15 @@ A web application for searching and streaming live concert recordings from Archi
 - Dynamic social meta tags (Open Graph, Twitter Cards, JSON-LD) for link previews
 
 ### Backend & Caching
-- Node.js/Express backend proxies and caches Archive.org API responses in MySQL
+- PHP backend proxies and caches Archive.org API responses in MySQL
 - Search results cached for 6 hours, show metadata cached for 24 hours
-- Automatic hourly cache expiration and cleanup
+- Works natively on any cPanel / shared hosting -- no Node.js required
 - Graceful degradation: if the backend is offline, the frontend falls back to direct Archive.org calls
 - Rate limiting on authentication endpoints (20 attempts per 15 minutes)
 
 ### User Accounts (Optional)
 - Registration and login with bcrypt-hashed passwords (12 rounds)
-- Session-based authentication stored in MySQL
+- PHP native session authentication
 - Profile management (display name, email, password change)
 - Accounts are entirely optional -- all browsing and playback works without signing in
 
@@ -47,10 +47,9 @@ A web application for searching and streaming live concert recordings from Archi
 | Layer | Technology |
 |-------|-----------|
 | Frontend | Vanilla JavaScript (ES6 modules), HTML5, Tailwind CSS (CDN) |
-| Backend | Node.js, Express.js |
-| Database | MySQL 5.7+ / MariaDB 10.3+ (mysql2) |
-| Auth | bcrypt, express-session, express-mysql-session |
-| Validation | express-validator |
+| Backend | PHP 7.4+ (no frameworks, no Composer) |
+| Database | MySQL 5.7+ / MariaDB 10.3+ (PDO) |
+| Auth | password_hash (bcrypt), PHP sessions |
 | Audio | HTML5 Audio API, Web Audio API |
 | Data Source | Archive.org public API |
 
@@ -63,7 +62,7 @@ A web application for searching and streaming live concert recordings from Archi
 ├── profile.html            # User profile, favorites, collections
 ├── collection.html         # Public collection view
 ├── admin.html              # Admin panel
-├── .htaccess               # Apache proxy config for cPanel hosting
+├── .htaccess               # Apache config (security headers, compression)
 ├── css/
 │   └── styles.css          # Custom styles and theme variables
 ├── js/
@@ -78,128 +77,96 @@ A web application for searching and streaming live concert recordings from Archi
 │   ├── utils.js            # Utility functions (formatting, XSS protection, toasts)
 │   ├── storage.js          # localStorage wrapper
 │   └── socialMeta.js       # Dynamic meta tags for SEO/sharing
-└── server/
-    ├── package.json        # Node.js dependencies
-    ├── index.js            # Express server entry point
-    ├── install.js          # Interactive database setup script
-    ├── .env.example        # Environment variable template
-    ├── config/
-    │   └── database.js     # MySQL connection pool with keep-alive
-    ├── middleware/
-    │   └── auth.js         # Session authentication middleware
-    ├── routes/
-    │   ├── search.js       # GET /api/search (cached proxy)
-    │   ├── shows.js        # GET /api/shows/:id (cached proxy)
-    │   ├── auth.js         # POST /api/auth/register, login, logout
-    │   ├── favorites.js    # CRUD /api/favorites
-    │   ├── collections.js  # CRUD /api/collections
-    │   └── admin.js        # Admin API endpoints
-    ├── services/
-    │   ├── cacheService.js # Cache read/write/expire logic
-    │   └── archiveProxy.js # Archive.org API client with retry logic
-    └── schema/
-        └── init.sql        # Database schema (all tables)
+└── api/                    # PHP backend
+    ├── .htaccess           # Route all requests to index.php
+    ├── index.php           # API router
+    ├── config.example.php  # Configuration template
+    ├── Database.php        # PDO connection singleton
+    ├── helpers.php         # Auth, JSON response, rate limiting
+    ├── CacheService.php    # MySQL cache read/write/expire
+    ├── ArchiveProxy.php    # Archive.org API client with retries
+    ├── install.php         # Database setup script (run once)
+    └── routes/
+        ├── search.php      # GET /api/search (cached proxy)
+        ├── shows.php       # GET /api/shows/:id (cached proxy)
+        ├── auth.php        # Auth endpoints (register, login, logout)
+        ├── favorites.php   # CRUD /api/favorites
+        ├── collections.php # CRUD /api/collections
+        └── admin.php       # Admin API endpoints
 ```
 
 ## Installation
 
-### Prerequisites
-- Node.js 16+
-- MySQL 5.7+ or MariaDB 10.3+
+### cPanel Setup (Recommended)
 
-### Quick Setup
+This is designed for cPanel hosting. No Node.js, no Composer, no SSH required.
+
+**1. Create a MySQL Database** in cPanel > MySQL Databases:
+   - Create a database (e.g., `youruser_tapefinder`)
+   - Create a database user with a strong password
+   - **Add the user to the database** with All Privileges
+
+**2. Upload Files** via cPanel File Manager or FTP:
+   - Upload everything to your `public_html` directory
+
+**3. Configure the backend:**
+   - In File Manager, navigate to `public_html/api/`
+   - Copy `config.example.php` to `config.php`
+   - Edit `config.php` and fill in your database credentials:
+
+```php
+'db' => [
+    'host'     => 'localhost',
+    'name'     => 'youruser_tapefinder',  // your cPanel DB name
+    'user'     => 'youruser_dbuser',      // your cPanel DB user
+    'password' => 'your_password',
+],
+```
+
+**4. Run the installer** -- choose one method:
+
+   - **Browser:** Visit `https://yourdomain.com/api/install.php`
+   - **cPanel Terminal:** `cd ~/public_html/api && php install.php`
+
+**5. Delete `install.php`** after setup (or rename it) for security.
+
+**6. Test it:** Visit `https://yourdomain.com/api/health` -- you should see `{"status":"ok","database":"connected"}`.
+
+That's it. Open your domain in a browser and start searching.
+
+### Local Development
 
 ```bash
 # Clone the repository
 git clone https://github.com/morroware/Grateful-Dead-Tape-Finder.git
-cd Grateful-Dead-Tape-Finder/server
+cd Grateful-Dead-Tape-Finder
 
-# Install dependencies
-npm install
+# Set up the PHP backend
+cd api
+cp config.example.php config.php
+# Edit config.php with your local MySQL credentials
+php install.php
 
-# Run the interactive installer
-# This creates the database, tables, .env file, and admin account
-node install.js
-
-# Start the server
-npm start
+# Start a local PHP server
+cd ..
+php -S localhost:8000
 ```
 
-The installer will prompt you for MySQL credentials and create everything automatically. Once started, open `http://localhost:3001` in your browser.
-
-### Manual Setup
-
-1. Copy `.env.example` to `.env` and fill in your MySQL credentials:
-
-```bash
-cp .env.example .env
-```
-
-2. Create the database and tables:
-
-```bash
-mysql -u root -p < schema/init.sql
-```
-
-3. Install dependencies and start:
-
-```bash
-npm install
-npm start
-```
-
-### cPanel / Shared Hosting Setup
-
-1. **Create a MySQL Database** in cPanel > MySQL Databases
-   - Create a database (e.g., `youruser_tapefinder`)
-   - Create a database user with a strong password
-   - Add the user to the database with All Privileges
-
-2. **Upload Files** via cPanel File Manager or FTP
-   - Upload the entire project to your `public_html` directory (or a subdirectory)
-   - The `.htaccess` file handles routing API requests to the Node.js backend
-
-3. **Set Up Node.js** via cPanel > Setup Node.js App (if available)
-   - Application root: `server/`
-   - Application startup file: `index.js`
-   - Set environment variables from `.env.example`
-   - Click "Run NPM Install" then "Start Application"
-
-4. **Alternative: SSH Setup**
-
-```bash
-cd ~/public_html/server   # or wherever you uploaded
-cp .env.example .env
-nano .env                 # fill in your cPanel MySQL credentials
-npm install
-node install.js           # creates tables and admin user
-```
-
-5. **Keep Node.js Running** -- use PM2 or cPanel's Node.js manager:
-
-```bash
-npm install -g pm2
-pm2 start index.js --name tapefinder
-pm2 save
-pm2 startup
-```
-
-6. **Apache Proxy** -- The included `.htaccess` file proxies `/api/*` requests to the Node.js backend on port 3001. If your cPanel uses Phusion Passenger instead, uncomment the Passenger lines in `.htaccess` and comment out the RewriteRule.
+Open `http://localhost:8000` in your browser.
 
 ### Static-Only Mode (No Backend)
 
 The app works without the backend -- just serve the files from any static host. Search and playback use Archive.org directly. User accounts, favorites, collections, and caching won't be available.
 
 ```bash
-# Any of these work:
 python3 -m http.server 8000
+# or
 npx http-server -p 8000
-php -S localhost:8000
 ```
 
 ## Database Schema
 
-8 tables in MySQL:
+8 tables in MySQL (created automatically by `install.php`):
 
 | Table | Purpose |
 |-------|---------|
@@ -210,12 +177,11 @@ php -S localhost:8000
 | `favorites` | User-to-show favorites with personal notes |
 | `collections` | Named, shareable curated show lists |
 | `collection_items` | Shows within collections (ordered) |
-| `sessions` | Server-side session storage (express-mysql-session) |
 
 ## API Endpoints
 
 ### Public (no auth)
-- `GET /api/search?q=...&page=1&rows=10` -- Search with caching
+- `GET /api/search?q=...&page=1&rows=50` -- Search with caching
 - `GET /api/shows/:identifier` -- Show metadata with caching
 - `GET /api/health` -- Server health check
 - `GET /api/collections/:slug` -- View public collection
@@ -271,23 +237,20 @@ php -S localhost:8000
 | `N` | Next track |
 | `P` | Previous track |
 
-## Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `DB_HOST` | localhost | MySQL host |
-| `DB_PORT` | 3306 | MySQL port |
-| `DB_USER` | tapefinder | MySQL username |
-| `DB_PASSWORD` | | MySQL password |
-| `DB_NAME` | tapefinder | Database name |
-| `SESSION_SECRET` | | Random secret for sessions (generated by installer) |
-| `PORT` | 3001 | Server port |
-| `FRONTEND_ORIGIN` | http://localhost:8080 | CORS allowed origin (`*` for any, comma-separated for multiple) |
-| `SEARCH_CACHE_TTL` | 21600 | Search cache lifetime in seconds (6h) |
-| `SHOW_CACHE_TTL` | 86400 | Show cache lifetime in seconds (24h) |
-| `ARCHIVE_API_BASE` | https://archive.org | Archive.org API base URL |
-
 ## Configuration
+
+### `api/config.php`
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `db.host` | localhost | MySQL host |
+| `db.port` | 3306 | MySQL port |
+| `db.name` | tapefinder | Database name |
+| `db.user` | tapefinder | MySQL username |
+| `db.password` | | MySQL password |
+| `session.lifetime` | 30 days | Session cookie lifetime |
+| `cache.search_ttl` | 21600 | Search cache lifetime in seconds (6h) |
+| `cache.show_ttl` | 86400 | Show cache lifetime in seconds (24h) |
 
 ### Adding Bands
 
@@ -303,24 +266,24 @@ Edit `js/bandConfig.js`:
 
 Add to `getAllBands()` for the dropdown, and add a matching `<option>` in `index.html`.
 
-### Cache TTLs
-
-Adjust `SEARCH_CACHE_TTL` and `SHOW_CACHE_TTL` in `.env` (values in seconds):
-- Search results: 21600 (6 hours) -- balances freshness with API load
-- Show metadata: 86400 (24 hours) -- metadata rarely changes
-
 ## Security
 
 - All user-facing text is HTML-escaped to prevent XSS
-- SQL queries use parameterized statements to prevent injection
-- Passwords are hashed with bcrypt (12 rounds)
-- Session cookies are httpOnly with secure flag in production
-- Auth endpoints are rate-limited (20 requests per 15 minutes)
-- Show identifiers are validated against a strict allowlist pattern
-- CORS is configurable via environment variable
+- SQL queries use PDO prepared statements to prevent injection
+- Passwords are hashed with bcrypt (12 rounds) via `password_hash()`
+- Session cookies are httpOnly with secure flag on HTTPS
+- Auth endpoints are rate-limited (20 requests per 15 minutes per IP)
+- Internal PHP files are blocked from direct access via `.htaccess`
+- Server directory and sensitive files (.env, .sql, .md) are blocked
 
-## Browser Requirements
+## Requirements
 
+### Server
+- PHP 7.4+ with PDO, curl, and JSON extensions (standard on cPanel)
+- MySQL 5.7+ or MariaDB 10.3+
+- Apache with mod_rewrite (standard on cPanel)
+
+### Browser
 - ES6 module support
 - Web Audio API
 - HTML5 Audio
@@ -328,6 +291,10 @@ Adjust `SEARCH_CACHE_TTL` and `SHOW_CACHE_TTL` in `.env` (values in seconds):
 - localStorage
 
 **Tested on:** Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
+
+## Node.js Backend (Alternative)
+
+A Node.js/Express backend is also included in the `server/` directory for use outside cPanel. See `server/README.md` for details. The PHP backend is recommended for cPanel hosting.
 
 ## License
 

@@ -12,12 +12,17 @@ const { cleanExpiredCache } = require('./services/cacheService');
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
 
+// ── Trust proxy (required behind Apache/Passenger on cPanel) ──
+app.set('trust proxy', 1);
+
 // ── Middleware ──
 
-// CORS
-const frontendOrigin = process.env.FRONTEND_ORIGIN || 'http://localhost:8080';
+// CORS — allow requests from the frontend origin
+// On cPanel, set FRONTEND_ORIGIN to your domain (e.g. https://yourdomain.com)
+// Set to * to allow any origin (simplest for same-server setups)
+const frontendOrigin = process.env.FRONTEND_ORIGIN || '*';
 app.use(cors({
-    origin: frontendOrigin === '*' ? true : frontendOrigin.split(','),
+    origin: frontendOrigin === '*' ? true : frontendOrigin.split(',').map(s => s.trim()),
     credentials: true
 }));
 
@@ -41,6 +46,10 @@ const sessionStore = new MySQLStore({
     }
 }, getPool());
 
+// Detect HTTPS from proxy headers or explicit config
+const isSecure = process.env.SECURE_COOKIES === 'true' ||
+    (process.env.FRONTEND_ORIGIN && process.env.FRONTEND_ORIGIN.startsWith('https'));
+
 app.use(session({
     key: 'tapefinder_sid',
     secret: process.env.SESSION_SECRET || 'change-this-secret-in-production',
@@ -50,7 +59,7 @@ app.use(session({
     cookie: {
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: isSecure,
         sameSite: 'lax'
     }
 }));
@@ -112,23 +121,26 @@ setInterval(async () => {
     }
 }, 60 * 60 * 1000); // Every hour
 
-// ── Start server ──
-async function start() {
-    try {
-        await testConnection();
-        console.log('Database connected');
-    } catch (error) {
-        console.error('Database connection failed:', error.message);
-        console.error('Make sure MySQL is running and .env is configured correctly.');
-        console.error('Run "node install.js" to set up the database.');
-        process.exit(1);
-    }
+// ── Export app for Passenger (cPanel) ──
+module.exports = app;
 
-    app.listen(PORT, () => {
-        console.log(`Tape Finder server running on port ${PORT}`);
-        console.log(`Frontend origin: ${frontendOrigin}`);
-        console.log(`API: http://localhost:${PORT}/api/health`);
-    });
+// ── Start server (when run directly, not via Passenger) ──
+if (require.main === module) {
+    (async function start() {
+        try {
+            await testConnection();
+            console.log('Database connected');
+        } catch (error) {
+            console.error('Database connection failed:', error.message);
+            console.error('Make sure MySQL is running and .env is configured correctly.');
+            console.error('Run "node install.js" to set up the database.');
+            process.exit(1);
+        }
+
+        app.listen(PORT, () => {
+            console.log(`Tape Finder server running on port ${PORT}`);
+            console.log(`Frontend origin: ${frontendOrigin}`);
+            console.log(`API: http://localhost:${PORT}/api/health`);
+        });
+    })();
 }
-
-start();
