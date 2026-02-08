@@ -1,18 +1,23 @@
 # Apache configuration for cPanel / shared hosting
-# This routes API requests to the Node.js backend via proxy
+#
+# SETUP: Choose ONE of these approaches based on your cPanel:
+#
+#   Option A: cPanel "Setup Node.js App" (most common, uses Passenger)
+#     - No .htaccess proxy needed — Passenger handles it
+#     - Just set Application Root to the "server" folder
+#     - Set Startup File to "app.js"
+#
+#   Option B: Manual Node.js + mod_proxy (less common on shared hosting)
+#     - Uncomment the mod_proxy section below
+#     - Start Node.js manually or via PM2
 
-# Enable rewrite engine
 RewriteEngine On
 
-# Proxy API requests to Node.js backend
-# Adjust port to match your .env PORT setting
-RewriteRule ^api/(.*)$ http://127.0.0.1:3001/api/$1 [P,L]
-
-# If using Passenger (common on cPanel with Node.js):
-# Uncomment these lines and comment out the RewriteRule above
-# PassengerAppRoot /home/username/Grateful-Dead-Tape-Finder/server
-# PassengerAppType node
-# PassengerStartupFile index.js
+# ── Option B: mod_proxy (uncomment if your host supports it) ──
+# <IfModule mod_proxy.c>
+#   ProxyPreserveHost On
+#   RewriteRule ^api/(.*)$ http://127.0.0.1:3001/api/$1 [P,L]
+# </IfModule>
 
 # Security headers
 <IfModule mod_headers.c>
