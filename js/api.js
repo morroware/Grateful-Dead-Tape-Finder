@@ -3,13 +3,21 @@
  * Calls backend first, falls back to direct Archive.org if backend is unavailable
  */
 
-// Route through index.php directly — works on any hosting without mod_rewrite
-const API_BASE = new URL('../api/index.php', import.meta.url).pathname;
+// Route through index.php with query param to avoid PATH_INFO restrictions.
+const API_BASE = new URL('../api/index.php', import.meta.url);
 let backendAvailable = null; // null = unknown, true/false after first check
 
 async function apiCall(endpoint, options = {}) {
     try {
-        const response = await fetch(`${API_BASE}${endpoint}`, {
+        const [path, queryString] = endpoint.split('?');
+        const url = new URL(API_BASE);
+        url.searchParams.set('route', path.replace(/^\/+/, ''));
+        if (queryString) {
+            const extraParams = new URLSearchParams(queryString);
+            extraParams.forEach((value, key) => url.searchParams.append(key, value));
+        }
+
+        const response = await fetch(url.toString(), {
             credentials: 'include',
             headers: { 'Content-Type': 'application/json', ...options.headers },
             ...options

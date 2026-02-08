@@ -15,9 +15,14 @@ handleCors();
 // Parse the request
 $method = $_SERVER['REQUEST_METHOD'];
 
+// Prefer explicit query param routing to avoid PATH_INFO restrictions.
+$routeParam = $_GET['route'] ?? $_GET['path'] ?? null;
+
 // Prefer PATH_INFO (works without mod_rewrite: /api/index.php/search)
 // Fall back to parsing REQUEST_URI for clean URLs (/api/search)
-if (!empty($_SERVER['PATH_INFO'])) {
+if (!empty($routeParam)) {
+    $path = trim($routeParam, '/');
+} elseif (!empty($_SERVER['PATH_INFO'])) {
     $path = trim($_SERVER['PATH_INFO'], '/');
 } else {
     $uri  = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
