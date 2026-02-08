@@ -1,23 +1,7 @@
 # Apache configuration for cPanel / shared hosting
-#
-# SETUP: Choose ONE of these approaches based on your cPanel:
-#
-#   Option A: cPanel "Setup Node.js App" (most common, uses Passenger)
-#     - No .htaccess proxy needed — Passenger handles it
-#     - Just set Application Root to the "server" folder
-#     - Set Startup File to "app.js"
-#
-#   Option B: Manual Node.js + mod_proxy (less common on shared hosting)
-#     - Uncomment the mod_proxy section below
-#     - Start Node.js manually or via PM2
+# The PHP backend lives in api/ — no proxy needed.
 
 RewriteEngine On
-
-# ── Option B: mod_proxy (uncomment if your host supports it) ──
-# <IfModule mod_proxy.c>
-#   ProxyPreserveHost On
-#   RewriteRule ^api/(.*)$ http://127.0.0.1:3001/api/$1 [P,L]
-# </IfModule>
 
 # Security headers
 <IfModule mod_headers.c>
@@ -26,7 +10,7 @@ RewriteEngine On
   Header set X-XSS-Protection "1; mode=block"
 </IfModule>
 
-# Prevent access to server directory and sensitive files
+# Prevent access to sensitive files
 <FilesMatch "\.(env|sql|md)$">
   <IfModule mod_authz_core.c>
     Require all denied
@@ -37,6 +21,7 @@ RewriteEngine On
   </IfModule>
 </FilesMatch>
 
+# Block direct access to server/ (Node.js backend, not used with PHP)
 RedirectMatch 403 /server/
 RedirectMatch 403 /node_modules/
 
