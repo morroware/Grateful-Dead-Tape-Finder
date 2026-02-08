@@ -2,7 +2,9 @@
 /**
  * API Router — dispatches requests to route handlers.
  *
- * All /api/* requests are rewritten here by .htaccess.
+ * Supports two URL styles:
+ *   1. Clean URLs via mod_rewrite:  /api/search  (if .htaccess rewrite works)
+ *   2. PATH_INFO without rewrite:   /api/index.php/search  (always works)
  */
 
 require_once __DIR__ . '/helpers.php';
@@ -12,11 +14,17 @@ handleCors();
 
 // Parse the request
 $method = $_SERVER['REQUEST_METHOD'];
-$uri    = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// Strip /api/ prefix (handles both /api/search and bare /search if .htaccess strips it)
-$path = preg_replace('#^.*/api/#', '', $uri);
-$path = trim($path, '/');
+// Prefer PATH_INFO (works without mod_rewrite: /api/index.php/search)
+// Fall back to parsing REQUEST_URI for clean URLs (/api/search)
+if (!empty($_SERVER['PATH_INFO'])) {
+    $path = trim($_SERVER['PATH_INFO'], '/');
+} else {
+    $uri  = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    $path = preg_replace('#^.*/api/#', '', $uri);
+    $path = preg_replace('#^index\.php/?#', '', $path);
+    $path = trim($path, '/');
+}
 $segments = $path ? explode('/', $path) : [];
 
 $route    = $segments[0] ?? '';

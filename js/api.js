@@ -3,8 +3,8 @@
  * Calls backend first, falls back to direct Archive.org if backend is unavailable
  */
 
-// Resolve API path relative to this module's location, so it works in subdirectory deployments
-const API_BASE = new URL('../api', import.meta.url).pathname;
+// Route through index.php directly — works on any hosting without mod_rewrite
+const API_BASE = new URL('../api/index.php', import.meta.url).pathname;
 let backendAvailable = null; // null = unknown, true/false after first check
 
 async function apiCall(endpoint, options = {}) {
