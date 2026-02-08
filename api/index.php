@@ -32,38 +32,50 @@ $subRoute = $segments[1] ?? '';
 $param3   = $segments[2] ?? '';
 $param4   = $segments[3] ?? '';
 
+// Check that config.php exists before dispatching database-dependent routes
+$configExists = file_exists(__DIR__ . '/config.php');
+
 // Dispatch to route handlers
 try {
     switch ($route) {
         case 'search':
+            if (!$configExists) jsonError('Backend not configured — run install first', 503);
             require __DIR__ . '/routes/search.php';
             break;
 
         case 'shows':
+            if (!$configExists) jsonError('Backend not configured — run install first', 503);
             require __DIR__ . '/routes/shows.php';
             break;
 
         case 'auth':
+            if (!$configExists) jsonError('Backend not configured — run install first', 503);
             require __DIR__ . '/routes/auth.php';
             break;
 
         case 'favorites':
+            if (!$configExists) jsonError('Backend not configured — run install first', 503);
             require __DIR__ . '/routes/favorites.php';
             break;
 
         case 'collections':
+            if (!$configExists) jsonError('Backend not configured — run install first', 503);
             require __DIR__ . '/routes/collections.php';
             break;
 
         case 'admin':
+            if (!$configExists) jsonError('Backend not configured — run install first', 503);
             require __DIR__ . '/routes/admin.php';
             break;
 
         case 'health':
+            if (!$configExists) {
+                jsonResponse(['status' => 'error', 'database' => 'not configured', 'message' => 'config.php missing — run install'], 503);
+            }
             try {
                 Database::get();
                 jsonResponse(['status' => 'ok', 'database' => 'connected']);
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 jsonResponse(['status' => 'error', 'database' => 'disconnected', 'message' => $e->getMessage()], 503);
             }
             break;
@@ -74,7 +86,7 @@ try {
 } catch (PDOException $e) {
     error_log('Database error: ' . $e->getMessage());
     jsonError('Database error', 500);
-} catch (Exception $e) {
+} catch (\Throwable $e) {
     error_log('Server error: ' . $e->getMessage());
     jsonError($e->getMessage(), 500);
 }
