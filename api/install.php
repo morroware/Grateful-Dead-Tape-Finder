@@ -31,6 +31,30 @@ out('  ║   PHP Backend Setup                       ║');
 out('  ╚══════════════════════════════════════════╝');
 out('');
 
+// Check PHP version and required extensions
+$phpVersion = PHP_VERSION;
+out("  PHP Version: $phpVersion");
+if (version_compare($phpVersion, '7.4.0', '<')) {
+    out('  ERROR: PHP 7.4+ is required. Your hosting has PHP ' . $phpVersion);
+    out('  On cPanel: Select PHP Version > change to 7.4 or higher.');
+    exit(1);
+}
+
+$requiredExtensions = ['pdo', 'pdo_mysql', 'curl', 'json', 'mbstring'];
+$missing = [];
+foreach ($requiredExtensions as $ext) {
+    if (!extension_loaded($ext)) {
+        $missing[] = $ext;
+    }
+}
+if (!empty($missing)) {
+    out('  ERROR: Missing required PHP extensions: ' . implode(', ', $missing));
+    out('  On cPanel: Select PHP Version > Extensions > enable the missing ones.');
+    exit(1);
+}
+out('  Required PHP extensions: OK');
+out('');
+
 // Check for config file
 $configPath = __DIR__ . '/config.php';
 if (!file_exists($configPath)) {
@@ -145,7 +169,7 @@ $tables = [
         id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         username        VARCHAR(50) NOT NULL UNIQUE,
         email           VARCHAR(255) NOT NULL UNIQUE,
-        password_hash   CHAR(60) NOT NULL,
+        password_hash   VARCHAR(255) NOT NULL,
         display_name    VARCHAR(100),
         is_admin        BOOLEAN DEFAULT FALSE,
         created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

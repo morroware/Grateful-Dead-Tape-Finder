@@ -70,9 +70,18 @@ async function directArchiveSearch(queryString, page, rows) {
 export async function getShowMetadata(identifier) {
     const result = await apiCall(`/shows/${encodeURIComponent(identifier)}`);
     if (result) {
+        // Backend returns tracks as {filename, title, format, size, duration}
+        // Map to Archive.org raw format {name, title, format, size, length} for player compatibility
+        const files = (result.tracks || []).map(t => ({
+            name: t.filename,
+            title: t.title,
+            format: t.format,
+            size: t.size,
+            length: t.duration
+        }));
         return {
             metadata: result.metadata,
-            files: result.files,
+            files: files,
             cached: result.cached
         };
     }
@@ -128,7 +137,7 @@ export async function getFavorites() {
 
 export async function checkFavorite(identifier) {
     const result = await apiCall(`/favorites/check/${encodeURIComponent(identifier)}`);
-    return result ? result.isFavorited : false;
+    return result ? result.favorited : false;
 }
 
 export async function addFavorite(identifier, title, creator, date, notes) {

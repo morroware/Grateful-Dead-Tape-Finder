@@ -124,8 +124,8 @@ export async function initCollectionDropdown(identifier, title, creator) {
 
         try {
             const result = await createCollection(name, '', true);
-            if (result && result.collection) {
-                await addToCollection(result.collection.slug, identifier, title, creator);
+            if (result && result.slug) {
+                await addToCollection(result.slug, identifier, title, creator);
                 showToast(`Added to "${name}"`, 'success');
                 dropdown.classList.add('hidden');
                 newForm.classList.add('hidden');

@@ -1,0 +1,11 @@
+# PHP backend
+api/config.php
+api/.ratelimit/
+
+# Node.js backend
+server/node_modules/
+server/.env
+
+# OS files
+.DS_Store
+Thumbs.db

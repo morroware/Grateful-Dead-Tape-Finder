@@ -25,7 +25,15 @@ function getJsonBody() {
 // ── CORS ──
 
 function handleCors() {
-    header('Access-Control-Allow-Origin: *');
+    // When Allow-Credentials is true, Allow-Origin cannot be '*' (CORS spec).
+    // Reflect the requesting origin for credentialed requests (sessions).
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+    if ($origin) {
+        header("Access-Control-Allow-Origin: $origin");
+    } else {
+        // Same-origin requests don't send an Origin header
+        header('Access-Control-Allow-Origin: *');
+    }
     header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
     header('Access-Control-Allow-Headers: Content-Type');
     header('Access-Control-Allow-Credentials: true');
@@ -83,12 +91,19 @@ function getCurrentUser() {
 }
 
 // ── Rate Limiting (file-based, per IP) ──
+// Uses a project-local tmp directory instead of sys_get_temp_dir(),
+// which is often shared/purged on cPanel shared hosting.
 
 function checkRateLimit($action = 'auth', $maxAttempts = 20, $windowSeconds = 900) {
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
     $key = md5($action . ':' . $ip);
-    $dir = sys_get_temp_dir() . '/tapefinder_rate';
-    if (!is_dir($dir)) @mkdir($dir, 0700, true);
+    // Store rate limit files in api/.ratelimit/ (project-local, .htaccess-protected)
+    $dir = __DIR__ . '/.ratelimit';
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0700, true);
+        // Prevent web access with an .htaccess deny-all
+        @file_put_contents($dir . '/.htaccess', "Require all denied\n");
+    }
     $file = $dir . '/' . $key;
 
     $data = ['attempts' => 0, 'reset_at' => time() + $windowSeconds];
