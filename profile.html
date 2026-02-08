@@ -240,7 +240,7 @@
 
         container.querySelectorAll('.copy-slug').forEach(btn => {
           btn.addEventListener('click', () => {
-            const url = window.location.origin + '/collection.html?slug=' + btn.dataset.slug;
+            const url = new URL('collection.html?slug=' + btn.dataset.slug, window.location).href;
             navigator.clipboard.writeText(url).then(() => showToast('Link copied!', 'success'));
           });
         });
