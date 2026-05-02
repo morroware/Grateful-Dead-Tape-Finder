@@ -324,7 +324,7 @@ export function openPlayerPage(identifier) {
         showToast('Invalid show identifier', 'error');
         return;
     }
-    window.location.href = `player.html?id=${identifier}`;
+    window.location.href = `player.html?id=${encodeURIComponent(identifier)}`;
 }
 
 export function initSearchPage() {
@@ -435,8 +435,12 @@ export function initSearchPage() {
                 break;
             case 'r':
                 e.preventDefault();
-                const randomBtn = document.getElementById('randomShow');
-                if (randomBtn) randomBtn.click();
+                if (currentResults.length > 0) {
+                    const pick = currentResults[Math.floor(Math.random() * currentResults.length)];
+                    if (pick && pick.identifier) openPlayerPage(pick.identifier);
+                } else {
+                    showToast('Run a search first to pick a random show', 'info');
+                }
                 break;
         }
     });

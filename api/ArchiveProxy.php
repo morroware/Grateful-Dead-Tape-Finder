@@ -81,7 +81,7 @@ class ArchiveProxy {
      */
     public static function getShowMetadata($identifier) {
         $baseUrl = self::getBaseUrl();
-        $url = "$baseUrl/metadata/$identifier";
+        $url = "$baseUrl/metadata/" . rawurlencode($identifier);
         $response = self::fetch($url);
         $data = json_decode($response, true);
 
@@ -139,7 +139,7 @@ class ArchiveProxy {
 
             // Prefer first format seen for each title
             $titleKey = strtolower($title);
-            if (isset($seenTitles[$titleKey]) && !str_contains(strtolower($format), 'mp3')) {
+            if (isset($seenTitles[$titleKey]) && stripos($format, 'mp3') === false) {
                 continue;
             }
             $seenTitles[$titleKey] = true;

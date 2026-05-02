@@ -173,13 +173,17 @@ class CacheService {
     }
 
     public static function getStats() {
-        $searchCount = Database::queryOne("SELECT COUNT(*) as cnt FROM search_cache")['cnt'];
-        $showCount   = Database::queryOne("SELECT COUNT(*) as cnt FROM shows")['cnt'];
-        $trackCount  = Database::queryOne("SELECT COUNT(*) as cnt FROM show_tracks")['cnt'];
+        $searchTotal  = Database::queryOne("SELECT COUNT(*) as cnt FROM search_cache")['cnt'];
+        $searchActive = Database::queryOne("SELECT COUNT(*) as cnt FROM search_cache WHERE expires_at > NOW()")['cnt'];
+        $showTotal    = Database::queryOne("SELECT COUNT(*) as cnt FROM shows")['cnt'];
+        $showActive   = Database::queryOne("SELECT COUNT(*) as cnt FROM shows WHERE expires_at > NOW()")['cnt'];
+        $trackCount   = Database::queryOne("SELECT COUNT(*) as cnt FROM show_tracks")['cnt'];
         return [
-            'search_entries' => (int)$searchCount,
-            'shows_cached'   => (int)$showCount,
-            'tracks_cached'  => (int)$trackCount,
+            'activeSearchEntries' => (int)$searchActive,
+            'totalSearchRows'     => (int)$searchTotal,
+            'activeShowEntries'   => (int)$showActive,
+            'totalShowRows'       => (int)$showTotal,
+            'totalTracks'         => (int)$trackCount,
         ];
     }
 }

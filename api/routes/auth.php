@@ -49,7 +49,8 @@ switch ($subRoute) {
 
         $userId = Database::lastInsertId();
 
-        // Auto-login
+        // Auto-login — regenerate session ID to prevent fixation
+        session_regenerate_id(true);
         $_SESSION['user_id']  = $userId;
         $_SESSION['username'] = $username;
         $_SESSION['email']    = $email;
@@ -86,7 +87,8 @@ switch ($subRoute) {
         // Update last login
         Database::query("UPDATE users SET last_login_at = NOW() WHERE id = ?", [$user['id']]);
 
-        // Set session
+        // Regenerate session ID to prevent fixation, then bind identity
+        session_regenerate_id(true);
         $_SESSION['user_id']  = $user['id'];
         $_SESSION['username'] = $user['username'];
         $_SESSION['email']    = $user['email'];
@@ -163,7 +165,7 @@ switch ($subRoute) {
             }
             // Verify current password
             $user = Database::queryOne("SELECT password_hash FROM users WHERE id = ?", [$userId]);
-            if (!password_verify($body['current_password'] ?? '', $user['password_hash'])) {
+            if (!$user || !password_verify($body['current_password'] ?? '', $user['password_hash'])) {
                 jsonError('Current password is incorrect', 401);
             }
             $updates[] = 'password_hash = ?';

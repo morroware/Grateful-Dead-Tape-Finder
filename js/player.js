@@ -625,18 +625,25 @@ export class Player {
         
         this.playlistContainer.innerHTML = this.playlist.map((track, i) => `
             <div class="playlist-item py-2 px-3 flex justify-between items-center rounded-lg cursor-pointer"
-                 onclick="window.player.selectTrack(${i})"
                  data-track-index="${i}">
                 <div class="flex items-center space-x-2 min-w-0 flex-1">
                     <span class="text-sm text-gray-400 flex-shrink-0">
                         ${i + 1}.
                     </span>
                     <span class="text-sm text-gray-300 truncate">
-                        ${track.title}
+                        ${escapeHtml(track.title || '')}
                     </span>
                 </div>
             </div>
         `).join('');
+
+        // Use event delegation instead of inline onclick to avoid XSS via track titles
+        this.playlistContainer.querySelectorAll('[data-track-index]').forEach(el => {
+            el.addEventListener('click', () => {
+                const idx = parseInt(el.getAttribute('data-track-index'), 10);
+                if (!isNaN(idx)) this.selectTrack(idx);
+            });
+        });
         
         this.updatePlaylistInfo();
         

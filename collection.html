@@ -90,7 +90,11 @@
         document.title = c.name + ' - Live Music Archive';
         document.getElementById('coll-name').textContent = c.name;
         document.getElementById('coll-desc').textContent = c.description || '';
-        document.getElementById('coll-owner').textContent = c.owner.display_name || c.owner.username;
+        // Backend returns owner as a string (username/display_name); guard against either shape.
+        const ownerName = typeof c.owner === 'string'
+          ? c.owner
+          : (c.owner && (c.owner.display_name || c.owner.username)) || 'Unknown';
+        document.getElementById('coll-owner').textContent = ownerName;
         document.getElementById('coll-count').textContent = (data.items ? data.items.length : 0) + ' shows';
 
         const container = document.getElementById('coll-items');
@@ -100,8 +104,8 @@
         }
 
         container.innerHTML = data.items.map((item, i) => `
-          <div class="show-card rounded-lg p-4 cursor-pointer transition-all"
-               onclick="window.location.href='player.html?id=${item.identifier}'">
+          <div class="show-card rounded-lg p-4 cursor-pointer transition-all coll-open"
+               data-id="${escapeHtml(item.identifier)}">
             <div class="flex items-center gap-4">
               <span class="text-sm text-zinc-500 w-8 text-right flex-shrink-0">${i + 1}.</span>
               <div class="flex-1 min-w-0">
@@ -111,6 +115,13 @@
             </div>
           </div>
         `).join('');
+
+        container.querySelectorAll('.coll-open').forEach(el => {
+          el.addEventListener('click', () => {
+            const id = el.dataset.id;
+            if (id) window.location.href = 'player.html?id=' + encodeURIComponent(id);
+          });
+        });
 
       } catch (error) {
         showError('Error loading collection', error.message || 'Please try again later.');

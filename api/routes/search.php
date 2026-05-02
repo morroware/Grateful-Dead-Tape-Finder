@@ -9,6 +9,10 @@ require_once __DIR__ . '/../ArchiveProxy.php';
 
 if ($method !== 'GET') jsonError('Method not allowed', 405);
 
+// Soft IP rate-limit so a single client can't hammer Archive.org through us.
+// 120 requests per minute is enough for normal use plus bursty pagination.
+checkRateLimit('search', 120, 60);
+
 $query = trim($_GET['q'] ?? '');
 $page  = max(1, (int)($_GET['page'] ?? 1));
 $rows  = min(100, max(1, (int)($_GET['rows'] ?? 50)));

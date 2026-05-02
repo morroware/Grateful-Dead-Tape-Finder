@@ -25,19 +25,25 @@ switch ($action) {
 
         $cacheStats = CacheService::getStats();
         $userCount  = Database::queryOne("SELECT COUNT(*) as cnt FROM users")['cnt'];
+        $adminCount = Database::queryOne("SELECT COUNT(*) as cnt FROM users WHERE is_admin = 1")['cnt'];
         $favCount   = Database::queryOne("SELECT COUNT(*) as cnt FROM favorites")['cnt'];
 
-        $topFavorites = Database::queryAll(
+        $topShows = Database::queryAll(
             "SELECT identifier, title, creator, COUNT(*) as fav_count
              FROM favorites GROUP BY identifier, title, creator
              ORDER BY fav_count DESC LIMIT 10"
         );
 
         jsonResponse([
-            'cache'          => $cacheStats,
-            'user_count'     => (int)$userCount,
-            'favorite_count' => (int)$favCount,
-            'top_favorites'  => $topFavorites,
+            'users' => [
+                'total'  => (int)$userCount,
+                'admins' => (int)$adminCount,
+            ],
+            'favorites' => [
+                'total'    => (int)$favCount,
+                'topShows' => $topShows,
+            ],
+            'cache' => $cacheStats,
         ]);
         break;
 
@@ -50,16 +56,19 @@ switch ($action) {
                 $offset = ($page - 1) * $limit;
 
                 $users = Database::queryAll(
-                    "SELECT id, username, email, display_name, is_admin, created_at, last_login_at
-                     FROM users ORDER BY created_at DESC LIMIT ? OFFSET ?",
+                    "SELECT u.id, u.username, u.email, u.display_name, u.is_admin,
+                            u.created_at, u.last_login_at,
+                            (SELECT COUNT(*) FROM favorites f WHERE f.user_id = u.id) AS fav_count
+                     FROM users u ORDER BY u.created_at DESC LIMIT ? OFFSET ?",
                     [$limit, $offset]
                 );
-                $total = Database::queryOne("SELECT COUNT(*) as cnt FROM users")['cnt'];
+                $total = (int)Database::queryOne("SELECT COUNT(*) as cnt FROM users")['cnt'];
 
                 jsonResponse([
-                    'users' => $users,
-                    'total' => (int)$total,
-                    'page'  => $page,
+                    'users'      => $users,
+                    'total'      => $total,
+                    'page'       => $page,
+                    'totalPages' => (int)max(1, ceil($total / $limit)),
                 ]);
                 break;
 
@@ -136,9 +145,9 @@ switch ($action) {
         if ($paramId === 'clear') {
             $result = CacheService::cleanExpired();
             jsonResponse([
-                'message'        => 'Expired cache entries cleared',
-                'search_deleted' => $result['search_deleted'],
-                'shows_deleted'  => $result['shows_deleted'],
+                'message'       => 'Expired cache entries cleared',
+                'searchDeleted' => $result['search_deleted'],
+                'showsDeleted'  => $result['shows_deleted'],
             ]);
         } elseif ($paramId === 'purge') {
             CacheService::purgeAll();
