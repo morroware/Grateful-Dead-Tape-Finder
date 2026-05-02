@@ -33,6 +33,15 @@ return [
         'base_url' => 'https://archive.org',
     ],
 
+    // Cross-origin sharing.
+    // The frontend is served from the same origin as the API by default, so
+    // leave this empty. If you serve the frontend from a different host, list
+    // the exact origins allowed (scheme + host + optional port). Wildcards are
+    // intentionally not supported because credentialed CORS forbids them.
+    'cors' => [
+        'allowed_origins' => [],  // e.g. ['https://gratefuldeadparkinglots.com']
+    ],
+
     // Only used by install.php to create the first admin user
     'admin' => [
         'username' => 'admin',

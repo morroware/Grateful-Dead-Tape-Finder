@@ -3,12 +3,28 @@
  */
 
 import { checkAuth, login, register, logout } from './api.js';
-import { showToast } from './utils.js';
+import { showToast, escapeHtml } from './utils.js';
 
 let currentUser = null;
 
 export function getCurrentUser() {
     return currentUser;
+}
+
+/**
+ * Sanitize a `?return=...` URL so we never redirect to an off-site origin.
+ * Accepts only same-origin paths; anything else falls back to the home page.
+ */
+function safeReturnUrl(raw) {
+    const fallback = 'index.html';
+    if (!raw || typeof raw !== 'string') return fallback;
+    try {
+        const target = new URL(raw, window.location.href);
+        if (target.origin !== window.location.origin) return fallback;
+        return target.pathname + target.search + target.hash;
+    } catch {
+        return fallback;
+    }
 }
 
 export async function initAuth() {
@@ -26,13 +42,15 @@ function updateAuthUI() {
     if (!authArea) return;
 
     if (currentUser) {
+        const displayName = currentUser.display_name || currentUser.username || '';
+        const initial = displayName.charAt(0).toUpperCase();
         authArea.innerHTML = `
             <div class="relative" id="user-menu-wrapper">
                 <button id="user-menu-btn" class="flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors">
                     <span class="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-xs text-white font-medium">
-                        ${(currentUser.display_name || currentUser.username).charAt(0).toUpperCase()}
+                        ${escapeHtml(initial)}
                     </span>
-                    <span class="hidden sm:inline">${currentUser.display_name || currentUser.username}</span>
+                    <span class="hidden sm:inline">${escapeHtml(displayName)}</span>
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
@@ -116,8 +134,7 @@ export function setupLoginForm() {
                 if (result && result.user) {
                     currentUser = result.user;
                     showToast('Welcome back!', 'success');
-                    // Redirect to previous page or home
-                    const returnTo = new URLSearchParams(window.location.search).get('return') || 'index.html';
+                    const returnTo = safeReturnUrl(new URLSearchParams(window.location.search).get('return'));
                     window.location.href = returnTo;
                 }
             } catch (error) {
@@ -147,7 +164,7 @@ export function setupLoginForm() {
                 if (result && result.user) {
                     currentUser = result.user;
                     showToast('Account created!', 'success');
-                    const returnTo = new URLSearchParams(window.location.search).get('return') || 'index.html';
+                    const returnTo = safeReturnUrl(new URLSearchParams(window.location.search).get('return'));
                     window.location.href = returnTo;
                 }
             } catch (error) {

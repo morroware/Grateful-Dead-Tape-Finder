@@ -46,7 +46,10 @@ router.post('/register', [
 
         const userId = result.insertId;
 
-        // Set session
+        // Regenerate session ID after privilege change to prevent fixation
+        await new Promise((resolve, reject) =>
+            req.session.regenerate(err => err ? reject(err) : resolve())
+        );
         req.session.userId = userId;
         req.session.username = username;
         req.session.isAdmin = false;
@@ -96,7 +99,10 @@ router.post('/login', [
         // Update last login
         await query('UPDATE users SET last_login_at = NOW() WHERE id = ?', [user.id]);
 
-        // Set session
+        // Regenerate session ID on login to prevent fixation
+        await new Promise((resolve, reject) =>
+            req.session.regenerate(err => err ? reject(err) : resolve())
+        );
         req.session.userId = user.id;
         req.session.username = user.username;
         req.session.isAdmin = !!user.is_admin;

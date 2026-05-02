@@ -9,9 +9,16 @@ require_once __DIR__ . '/../ArchiveProxy.php';
 
 if ($method !== 'GET') jsonError('Method not allowed', 405);
 
+checkRateLimit('shows', 120, 60);
+
 $identifier = $subRoute;
 if (empty($identifier)) {
     jsonError('Show identifier is required');
+}
+
+// Validate identifier format to prevent SSRF / path traversal
+if (!validateIdentifier($identifier)) {
+    jsonError('Invalid show identifier', 400);
 }
 
 // Check cache

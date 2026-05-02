@@ -235,6 +235,25 @@ foreach ($tables as $sql) {
     }
 }
 
+// Migrations for installs predating the current schema. Each step is a
+// no-op if the column/index already exists.
+$migrations = [
+    "ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT FALSE",
+];
+foreach ($migrations as $sql) {
+    try {
+        $pdo->exec($sql);
+    } catch (PDOException $e) {
+        $msg = $e->getMessage();
+        // Ignore "duplicate column" / "already exists" — column already present
+        if (stripos($msg, 'duplicate') === false &&
+            stripos($msg, 'already') === false &&
+            stripos($msg, 'exists') === false) {
+            out("  Migration warning: $msg");
+        }
+    }
+}
+
 out('  Tables created successfully.');
 
 // Create admin user
@@ -242,16 +261,28 @@ $admin = $config['admin'];
 out('');
 out("  Creating admin user \"{$admin['username']}\"...");
 
-$hash = password_hash($admin['password'], PASSWORD_BCRYPT, ['cost' => 12]);
-
+// Only create the admin if no row already matches by username or email.
+// Re-running install.php should never silently reset an existing admin's
+// password to whatever happens to be in config.php.
 try {
-    $stmt = $pdo->prepare(
-        "INSERT INTO users (username, email, password_hash, display_name, is_admin)
-         VALUES (?, ?, ?, ?, TRUE)
-         ON DUPLICATE KEY UPDATE is_admin = TRUE, password_hash = VALUES(password_hash)"
-    );
-    $stmt->execute([$admin['username'], $admin['email'], $hash, $admin['username']]);
-    out("  Admin user \"{$admin['username']}\" ready.");
+    $existing = $pdo->prepare("SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1");
+    $existing->execute([$admin['username'], $admin['email']]);
+    $row = $existing->fetch(PDO::FETCH_ASSOC);
+
+    if ($row) {
+        // Make sure the existing user has admin privileges, but do NOT touch the password.
+        $promote = $pdo->prepare("UPDATE users SET is_admin = TRUE WHERE id = ?");
+        $promote->execute([$row['id']]);
+        out("  Admin user \"{$admin['username']}\" already exists — leaving password untouched.");
+    } else {
+        $hash = password_hash($admin['password'], PASSWORD_BCRYPT, ['cost' => 12]);
+        $stmt = $pdo->prepare(
+            "INSERT INTO users (username, email, password_hash, display_name, is_admin)
+             VALUES (?, ?, ?, ?, TRUE)"
+        );
+        $stmt->execute([$admin['username'], $admin['email'], $hash, $admin['username']]);
+        out("  Admin user \"{$admin['username']}\" created.");
+    }
 } catch (PDOException $e) {
     out("  Admin user: {$e->getMessage()}");
 }
@@ -266,7 +297,8 @@ out('    https://yourdomain.com/api/health');
 out('');
 out('  Admin login:');
 out("    Email:    {$admin['email']}");
-out("    Password: {$admin['password']}");
+out("    Password: (the value of admin.password from config.php)");
 out('');
-out('  IMPORTANT: Delete or rename install.php after setup!');
+out('  IMPORTANT: Delete or rename install.php after setup, and change the');
+out('  admin password from the default in config.example.php before going live.');
 out('');

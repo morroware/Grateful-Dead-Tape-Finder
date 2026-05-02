@@ -109,40 +109,6 @@ export function hideLoading() {
 }
 
 /**
- * Create HTML for a show card (basic version)
- * @param {Object} show - Show data object
- * @returns {string} HTML string for show card
- */
-export function createShowCard(show) {
-    const src = show.source ? show.source.toLowerCase() : '';
-    const isSbd = src.includes('soundboard') || src.includes('sbd');
-    const isAud = src.includes('audience') || src.includes('aud');
-    const isMx = src.includes('matrix');
-    
-    let tags = '';
-    if (isSbd) tags += `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900 text-green-100 mr-1">SBD</span>`;
-    if (isAud) tags += `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-900 text-yellow-100 mr-1">AUD</span>`;
-    if (isMx) tags += `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-900 text-purple-100">MATRIX</span>`;
-    
-    return `
-        <div class="bg-gray-800 border border-gray-700 rounded-lg shadow hover:shadow-lg p-6 mb-4 cursor-pointer"
-             onclick="openPlayerPage('${show.identifier}')">
-            <div class="flex justify-between items-start">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-100">${show.year}: ${show.title}</h3>
-                    <div class="mt-1">${tags}</div>
-                </div>
-                <div class="text-sm text-gray-400">${show.downloads || 0} downloads</div>
-            </div>
-            <div class="mt-2 text-sm text-gray-400">
-                <div>${show.venue || 'Unknown Venue'}</div>
-                <div>${show.coverage || 'Unknown Location'}</div>
-            </div>
-        </div>
-    `;
-}
-
-/**
  * Show toast notification
  * @param {string} message - Message to display
  * @param {string} type - Type of toast (success, error, info)

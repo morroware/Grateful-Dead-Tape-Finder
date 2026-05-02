@@ -204,19 +204,26 @@ export async function renderFavoritesList(container) {
         container.innerHTML = favorites.map(f => `
             <div class="show-card rounded-lg p-4 flex items-center justify-between gap-4 cursor-pointer hover:border-blue-500 transition-colors"
                  style="background:#18181b;border:1px solid #27272a;">
-                <div class="flex-1 min-w-0" onclick="window.location.href='player.html?id=${f.identifier}'">
+                <div class="flex-1 min-w-0 fav-open" data-id="${escapeHtml(f.identifier)}">
                     <div class="text-xs text-zinc-500">${escapeHtml(f.creator || 'Unknown Artist')}</div>
                     <div class="text-sm font-medium text-white truncate">${escapeHtml(f.title || f.identifier)}</div>
-                    <div class="text-xs text-zinc-500 mt-1">${f.date || ''}</div>
+                    <div class="text-xs text-zinc-500 mt-1">${escapeHtml(f.date || '')}</div>
                     ${f.notes ? `<div class="text-xs text-zinc-400 mt-1 italic truncate">${escapeHtml(f.notes)}</div>` : ''}
                 </div>
-                <button class="fav-remove text-red-500 hover:text-red-400 flex-shrink-0" data-id="${f.identifier}" title="Remove">
+                <button class="fav-remove text-red-500 hover:text-red-400 flex-shrink-0" data-id="${escapeHtml(f.identifier)}" title="Remove">
                     <svg class="w-5 h-5" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                     </svg>
                 </button>
             </div>
         `).join('');
+
+        container.querySelectorAll('.fav-open').forEach(el => {
+            el.addEventListener('click', () => {
+                const id = el.dataset.id;
+                if (id) window.location.href = 'player.html?id=' + encodeURIComponent(id);
+            });
+        });
 
         container.querySelectorAll('.fav-remove').forEach(btn => {
             btn.addEventListener('click', async (e) => {
