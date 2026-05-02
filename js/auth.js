@@ -6,6 +6,7 @@ import { checkAuth, login, register, logout } from './api.js';
 import { showToast, escapeHtml } from './utils.js';
 
 let currentUser = null;
+let outsideClickHandlerAttached = false;
 
 export function getCurrentUser() {
     return currentUser;
@@ -74,9 +75,13 @@ function updateAuthUI() {
             dropdown.classList.toggle('hidden');
         });
 
-        document.addEventListener('click', () => {
-            dropdown.classList.add('hidden');
-        });
+        if (!outsideClickHandlerAttached) {
+            document.addEventListener('click', () => {
+                const activeDropdown = document.getElementById('user-dropdown');
+                if (activeDropdown) activeDropdown.classList.add('hidden');
+            });
+            outsideClickHandlerAttached = true;
+        }
 
         logoutBtn.addEventListener('click', async () => {
             try {

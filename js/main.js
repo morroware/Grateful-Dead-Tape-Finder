@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (isPlayerPage) {
         console.log('Initializing player page');
         try {
-            initializePlayerPage();
+            await initializePlayerPage();
         } catch (error) {
             console.error('Fatal error on player page:', error);
             showPlayerInitError(error.message || 'Unknown error');
