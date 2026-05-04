@@ -81,6 +81,14 @@ async function getCachedShow(identifier) {
     };
 }
 
+// Archive.org sometimes returns metadata fields as arrays (e.g. multiple
+// creators or dates). Flatten to a string so MySQL doesn't reject the param.
+function asString(v) {
+    if (v === undefined || v === null) return null;
+    if (Array.isArray(v)) return v.length ? String(v[0]) : null;
+    return String(v);
+}
+
 async function setCachedShow(identifier, archiveData) {
     const m = archiveData.metadata || {};
 
@@ -108,20 +116,20 @@ async function setCachedShow(identifier, archiveData) {
            updated_at = NOW()`,
         [
             identifier,
-            m.title || null,
-            typeof m.creator === 'string' ? m.creator : (Array.isArray(m.creator) ? m.creator[0] : null),
-            m.date || null,
-            m.year ? parseInt(m.year, 10) || null : null,
-            m.venue || null,
-            m.coverage || null,
-            m.source || null,
-            m.lineage || null,
-            m.taper || null,
-            m.description || null,
-            m.notes || null,
-            m.setlist || null,
-            m.downloads ? parseInt(m.downloads, 10) || 0 : 0,
-            m.avg_rating ? parseFloat(m.avg_rating) || null : null,
+            asString(m.title),
+            asString(m.creator),
+            asString(m.date),
+            m.year ? parseInt(asString(m.year), 10) || null : null,
+            asString(m.venue),
+            asString(m.coverage),
+            asString(m.source),
+            asString(m.lineage),
+            asString(m.taper),
+            asString(m.description),
+            asString(m.notes),
+            Array.isArray(m.setlist) ? m.setlist.join('\n') : asString(m.setlist),
+            m.downloads ? parseInt(asString(m.downloads), 10) || 0 : 0,
+            m.avg_rating ? parseFloat(asString(m.avg_rating)) || null : null,
             JSON.stringify(m),
             SHOW_TTL
         ]

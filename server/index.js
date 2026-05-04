@@ -73,8 +73,37 @@ const authLimiter = rateLimit({
     legacyHeaders: false
 });
 
+// ── URL compatibility shim ──
+// The frontend is shared with the PHP backend, which uses /api/index.php/<route>
+// URLs to support cPanel hosting without mod_rewrite. Strip that prefix so the
+// Node.js Express routes below match.
+app.use((req, res, next) => {
+    if (req.url.startsWith('/api/index.php')) {
+        req.url = req.url.replace(/^\/api\/index\.php/, '/api') || '/api';
+    }
+    next();
+});
+
 // ── Static files (serve the frontend) ──
-app.use(express.static(path.join(__dirname, '..')));
+// Block backend source files from being served as static assets. Without this
+// guard, express.static would happily hand out api/config.php (DB credentials!),
+// api/Database.php, server/*.js, etc. as plain text since Node has no PHP handler
+// and these paths sit inside the served root.
+app.use((req, res, next) => {
+    const p = req.path;
+    const blocked =
+        p.startsWith('/server/') ||           // Node.js backend source + .env
+        p.startsWith('/api/.ratelimit') ||    // PHP rate-limit state dir
+        /\.(php|sql|env)$/i.test(p) ||        // any PHP/SQL/env file anywhere
+        /^\/api\/config\./i.test(p);          // belt + suspenders for config.*
+    if (blocked) {
+        return res.status(403).send('Forbidden');
+    }
+    next();
+});
+app.use(express.static(path.join(__dirname, '..'), {
+    dotfiles: 'ignore'
+}));
 
 // ── API Routes ──
 app.use('/api/search', require('./routes/search'));
@@ -92,6 +121,13 @@ app.get('/api/health', async (req, res) => {
     } catch (error) {
         res.status(503).json({ status: 'error', database: 'disconnected', message: error.message });
     }
+});
+
+// API 404 — anything under /api/ that didn't match a route should return JSON,
+// not HTML. Otherwise the frontend's apiCall sees an HTML body and disables the
+// backend, breaking auth/favorites for the rest of the session.
+app.use('/api', (req, res) => {
+    res.status(404).json({ error: 'Not found' });
 });
 
 // SPA fallback — serve index.html for non-API, non-file routes

@@ -28,9 +28,9 @@ router.get('/check/:identifier', async (req, res) => {
             'SELECT id FROM favorites WHERE user_id = ? AND identifier = ?',
             [req.session.userId, req.params.identifier]
         );
-        res.json({ isFavorited: !!fav });
+        res.json({ favorited: !!fav, id: fav ? fav.id : null });
     } catch (error) {
-        res.json({ isFavorited: false });
+        res.json({ favorited: false, id: null });
     }
 });
 
