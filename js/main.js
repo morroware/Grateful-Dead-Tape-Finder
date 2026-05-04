@@ -7,6 +7,7 @@ import { Player } from './player.js';
 import { showToast, escapeHtml } from './utils.js';
 import { initAuth } from './auth.js';
 import { initFavoriteButton, initCollectionDropdown } from './favorites.js';
+import SocialMetaUpdater from './socialMeta.js';
 
 // Global player instance for player page
 let player = null;
@@ -70,6 +71,16 @@ async function initializePlayerPage() {
             metadata.title || 'Unknown Show',
             typeof metadata.creator === 'string' ? metadata.creator : 'Unknown Artist'
         );
+
+        // Update social meta tags (Open Graph, Twitter Card, JSON-LD) so
+        // shared links to this show render with rich previews.
+        try {
+            SocialMetaUpdater.updateShowMeta({
+                metadata: { ...metadata, identifier }
+            });
+        } catch (e) {
+            console.warn('Could not update social meta tags:', e);
+        }
 
         // Auto-play
         try {
