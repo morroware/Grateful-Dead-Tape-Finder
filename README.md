@@ -130,7 +130,7 @@ This is designed for cPanel hosting. No Node.js, no Composer, no SSH required.
 
 **5. Delete `install.php`** after setup (or rename it) for security.
 
-**6. Test it:** Visit `https://yourdomain.com/api/health` -- you should see `{"status":"ok","database":"connected"}`.
+**6. Test it:** Visit `https://yourdomain.com/api/health` (or `https://yourdomain.com/api/index.php?route=health` if rewrite rules are blocked) — you should see `{"status":"ok","database":"connected"}`.
 
 That's it. Open your domain in a browser and start searching.
 
